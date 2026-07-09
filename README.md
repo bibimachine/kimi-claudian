@@ -1,28 +1,16 @@
 # Kimi Claudian
 
-An Obsidian plugin that embeds **Kimi Code CLI** in your vault sidebar. Your vault becomes Kimi's working directory — file read/write, search, bash, and multi-step workflows all work out of the box.
+[![GitHub release](https://img.shields.io/github/v/release/bibimachine/kimi-claudian?logo=github)](https://github.com/bibimachine/kimi-claudian/releases)
+[![Node.js](https://img.shields.io/badge/Node.js-24+-339933?logo=nodedotjs)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Obsidian](https://img.shields.io/badge/Obsidian-1.7+-7C3AED?logo=obsidian)](https://obsidian.md/)
+[![License](https://img.shields.io/github/license/bibimachine/kimi-claudian)](LICENSE)
+
+An Obsidian plugin that embeds **[Kimi Code CLI](https://platform.kimi.ai/docs/guide/claude-code-kimi)** in your vault sidebar. Your vault becomes Kimi's working directory — file read/write, search, bash commands, and multi-step workflows all work out of the box.
 
 ## Origin
 
 This project is a **Kimi-only fork** of [Claudian](https://github.com/YishenTu/claudian), originally created by [Yishen Tu](https://github.com/YishenTu). It removes the Claude / Codex / OpenCode / Pi providers and replaces them with a single provider backed by the local **Kimi Code CLI**.
-
-## Features & Usage
-
-Open the chat sidebar from the ribbon icon or command palette. Select text and use the hotkey for inline edit. Everything works like your familiar coding agent, powered by Kimi Code CLI.
-
-**Inline Edit** — Select text or start at the cursor position + hotkey to edit directly in notes with word-level diff preview.
-
-**Slash Commands & Skills** — Type `/` for reusable prompt templates and skills.
-
-**`@mention`** — Type `@` to mention vault files, subagents, MCP servers, or external directories.
-
-**Plan Mode** — Toggle via `Shift+Tab`. Kimi explores and designs before implementing, then presents a plan for approval.
-
-**Instruction Mode (`#`)** — Refined custom instructions added from the chat input.
-
-**MCP Servers** — Connect external tools via Model Context Protocol (stdio, SSE, HTTP) through Kimi Code CLI's MCP support.
-
-**Multi-Tab & Conversations** — Multiple chat tabs, conversation history, resume, and compact.
 
 ## Requirements
 
@@ -32,73 +20,27 @@ Open the chat sidebar from the ribbon icon or command palette. Select text and u
 
 ## Installation
 
-### Manual installation from build artifacts
+### From GitHub Release (recommended)
 
-Use this if you already have `main.js`, `styles.css`, and `manifest.json` (for example after running `npm run build`).
-
-1. Build the plugin (skip this if you already have the three files):
-   ```bash
-   npm run build
-   ```
-
-2. In your vault, create the plugin directory:
+1. Download the latest `kimi-claudian.zip` from [GitHub Releases](https://github.com/bibimachine/kimi-claudian/releases).
+2. Extract it into your vault's plugin folder:
    ```text
    .obsidian/plugins/kimi-claudian/
    ```
+3. In Obsidian, go to **Settings → Community plugins**, turn off **Safe mode**, and enable **Kimi Claudian**.
 
-   > The folder name can be anything, but we recommend using `kimi-claudian` to match the plugin ID. If you previously used `.obsidian/plugins/realclaudian` for Claudian, you can reuse that folder name; Obsidian reads the plugin ID from `manifest.json`.
-
-3. Copy the three build artifacts into that directory:
-   ```bash
-   cp main.js manifest.json styles.css /path/to/your/vault/.obsidian/plugins/kimi-claudian/
-   ```
-
-4. Enable the plugin in Obsidian:
-   - Open **Settings → Community plugins**
-   - Turn off **Safe mode** if it is on
-   - Find **Kimi Claudian** and click **Enable**
-
-### From source (development)
-
-1. Clone this repository into your vault's plugins folder:
-   ```bash
-   cd /path/to/vault/.obsidian/plugins
-   git clone <repo-url> kimi-claudian
-   cd kimi-claudian
-   ```
-
-2. Install dependencies and build:
-   ```bash
-   npm install
-   npm run build
-   ```
-
-3. Enable the plugin in Obsidian:
-   - Settings → Community plugins → Enable "Kimi Claudian"
-
-### Development
+### From source
 
 ```bash
-# Watch mode
-npm run dev
-
-# Production build
+npm install
 npm run build
 ```
 
-## Privacy & Data Use
+Then copy the generated `dist/kimi-claudian/` folder to `.obsidian/plugins/kimi-claudian/`.
 
-- **Sent to API**: Your input, attached files, images, and tool call outputs via Kimi Code CLI and your configured Kimi provider.
-- **Local storage**: Kimi Claudian settings and session metadata in `vault/.claudian/`; Kimi native sessions in `~/.kimi/sessions/`.
-- **Environment variables**: Kimi subprocesses inherit the Obsidian process environment plus any variables you configure in Kimi Claudian settings.
+## Usage
 
-## Troubleshooting
-
-### Kimi CLI not found
-
-If you encounter `spawn kimi ENOENT`, the plugin can't find the Kimi Code CLI.
-
-**Solution**: Find your CLI path with `which kimi` and set it in Settings → Advanced → Kimi CLI path. Leave it empty first to try auto-detection from PATH.
+Open the chat sidebar from the ribbon icon. Select text and use the inline-edit hotkey to edit notes with a word-level diff preview. Kimi uses your vault as its working directory.
 
 ## License
 

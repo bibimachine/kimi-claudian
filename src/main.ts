@@ -5,7 +5,7 @@ patchSetMaxListenersForElectron();
 import './providers';
 
 import type { Editor, WorkspaceLeaf } from 'obsidian';
-import { addIcon, MarkdownView, Notice, Plugin } from 'obsidian';
+import { MarkdownView, Notice, Plugin } from 'obsidian';
 
 import { DEFAULT_CLAUDIAN_SETTINGS } from './app/settings/defaultSettings';
 import { SharedStorageService } from './app/storage/SharedStorageService';
@@ -39,7 +39,6 @@ import { type InlineEditContext, InlineEditModal } from './features/inline-edit/
 import { ClaudianSettingTab } from './features/settings/ClaudianSettings';
 import { setLocale } from './i18n/i18n';
 import type { Locale } from './i18n/types';
-import { KIMI_ICON_SVG_PATHS } from './shared/icons';
 import { extractUserDisplayContent } from './utils/context';
 import { buildCursorContext } from './utils/editor';
 import { revealWorkspaceLeaf } from './utils/obsidianCompat';
@@ -66,9 +65,7 @@ export default class ClaudianPlugin extends Plugin {
       (leaf) => new ClaudianView(leaf, this)
     );
 
-    addIcon('kimi-claudian', KIMI_ICON_SVG_PATHS);
-
-    this.addRibbonIcon('kimi-claudian', 'Open Kimi-Claudian', () => {
+    this.addRibbonIcon('bot', 'Open Kimi-Claudian', () => {
       void this.activateView();
     });
 

@@ -1,7 +1,7 @@
 {
   "id": "kimi-claudian",
   "name": "Kimi Claudian",
-  "version": "2.0.29",
+  "version": "1.0.0",
   "minAppVersion": "1.7.2",
   "description": "Embeds Kimi Code CLI as an AI collaborator in your Obsidian vault. Your vault becomes Kimi's working directory for file reads and writes, search, bash commands, and multi-step workflows.",
   "author": "bibimachine",

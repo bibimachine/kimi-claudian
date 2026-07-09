@@ -101,7 +101,7 @@ export class ClaudianView extends ItemView {
   }
 
   getIcon(): string {
-    return 'kimi-claudian';
+    return 'bot';
   }
 
   /** Refreshes model-dependent UI across all tabs (used after settings/env changes). */

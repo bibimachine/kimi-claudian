@@ -32,13 +32,19 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Package plugin
+        run: |
+          cd dist
+          zip -r kimi-claudian.zip kimi-claudian
+
       - name: Generate artifact attestations
         uses: actions/attest@v4
         with:
           subject-path: |
-            main.js
-            manifest.json
-            styles.css
+            dist/kimi-claudian.zip
+            dist/kimi-claudian/main.js
+            dist/kimi-claudian/manifest.json
+            dist/kimi-claudian/styles.css
 
       - name: Get previous tag
         id: prev_tag
@@ -68,6 +74,4 @@ jobs:
 
             **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prev_tag.outputs.tag }}...${{ github.ref_name }}
           files: |
-            main.js
-            manifest.json
-            styles.css
+            dist/kimi-claudian.zip

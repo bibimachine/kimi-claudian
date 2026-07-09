@@ -1,6 +1,6 @@
 {
   "name": "kimi-claudian",
-  "version": "2.0.29",
+  "version": "1.0.0",
   "description": "Kimi Claudian - Kimi Code CLI embedded in Obsidian sidebar",
   "main": "main.js",
   "engines": {
