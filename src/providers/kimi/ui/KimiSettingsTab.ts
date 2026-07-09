@@ -471,7 +471,7 @@ export const kimiSettingsTabRenderer: ProviderSettingsTabRenderer = {
         } else if (modelCatalogLoadFailed) {
           emptyText = 'Could not load the Kimi Code CLI model catalog. Check the CLI path and login state, then expand this section again.';
         } else if (enriched.length === 0) {
-          emptyText = 'Start Kimi Code CLI once to load its model catalog. Claudian will then let you pick visible models.';
+          emptyText = 'Start Kimi Code CLI once to load its model catalog. Kimi-Claudian will then let you pick visible models.';
         }
         emptyEl.setText(emptyText);
         return;

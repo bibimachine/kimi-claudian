@@ -97,11 +97,11 @@ export class ClaudianView extends ItemView {
   }
 
   getDisplayText(): string {
-    return 'Claudian';
+    return 'Kimi-Claudian';
   }
 
   getIcon(): string {
-    return 'bot';
+    return 'kimi-claudian';
   }
 
   /** Refreshes model-dependent UI across all tabs (used after settings/env changes). */

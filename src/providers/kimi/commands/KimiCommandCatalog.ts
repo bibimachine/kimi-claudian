@@ -71,11 +71,11 @@ export class KimiCommandCatalog implements ProviderCommandCatalog {
   }
 
   async saveVaultEntry(_entry: ProviderCommandEntry): Promise<void> {
-    throw new Error('Kimi Code CLI runtime commands are not editable from Claudian.');
+    throw new Error('Kimi Code CLI runtime commands are not editable from Kimi-Claudian.');
   }
 
   async deleteVaultEntry(_entry: ProviderCommandEntry): Promise<void> {
-    throw new Error('Kimi Code CLI runtime commands are not deletable from Claudian.');
+    throw new Error('Kimi Code CLI runtime commands are not deletable from Kimi-Claudian.');
   }
 
   getDropdownConfig(): ProviderCommandDropdownConfig {
