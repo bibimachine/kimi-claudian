@@ -319,7 +319,13 @@ export class KimiChatRuntime implements ChatRuntime {
       if (options?.allowSessionCreation === false) {
         return true;
       }
-      return Boolean(await this.createSession(cwd));
+      try {
+        return Boolean(await this.createSession(cwd));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.lastStartError = message;
+        return false;
+      }
     }
 
     return true;
@@ -593,8 +599,22 @@ export class KimiChatRuntime implements ChatRuntime {
     });
     this.process.start();
 
+    // Capture spawn / immediate exit errors before we try to talk to the CLI.
+    let earlyError: Error | undefined;
+    const unsubscribeEarlyError = this.process.onClose((error) => {
+      if (error) {
+        earlyError = error;
+      }
+    });
+
     // Give the CLI a moment to fail fast (e.g. missing binary / auth errors).
     await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
+    unsubscribeEarlyError();
+
+    if (earlyError) {
+      const stderr = this.process.getStderrSnapshot();
+      throw new Error(stderr ? `${earlyError.message}\n${stderr}` : earlyError.message, { cause: earlyError });
+    }
     if (!this.process.isAlive()) {
       const stderr = this.process.getStderrSnapshot();
       throw new Error(stderr ? `Kimi Code CLI exited: ${stderr}` : 'Kimi Code CLI exited immediately.');
@@ -1031,27 +1051,23 @@ export class KimiChatRuntime implements ChatRuntime {
       return null;
     }
 
-    try {
-      this.setSupportedCommands([]);
-      const response = await this.connection.newSession({
-        cwd,
-        mcpServers: [],
-      });
-      this.loadedSessionId = response.sessionId;
-      this.sessionId = response.sessionId;
-      this.sessionCwds.set(response.sessionId, cwd);
-      await this.syncSessionModelState({
-        configOptions: response.configOptions ?? null,
-        models: response.models ?? null,
-      });
-      await this.syncSessionModeState({
-        configOptions: response.configOptions ?? null,
-        modes: response.modes ?? null,
-      });
-      return response.sessionId;
-    } catch {
-      return null;
-    }
+    this.setSupportedCommands([]);
+    const response = await this.connection.newSession({
+      cwd,
+      mcpServers: [],
+    });
+    this.loadedSessionId = response.sessionId;
+    this.sessionId = response.sessionId;
+    this.sessionCwds.set(response.sessionId, cwd);
+    await this.syncSessionModelState({
+      configOptions: response.configOptions ?? null,
+      models: response.models ?? null,
+    });
+    await this.syncSessionModeState({
+      configOptions: response.configOptions ?? null,
+      modes: response.modes ?? null,
+    });
+    return response.sessionId;
   }
 
   private async loadSession(sessionId: string, cwd: string): Promise<boolean> {
