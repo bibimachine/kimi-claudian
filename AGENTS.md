@@ -2,9 +2,7 @@
 
 ## Project
 
-Claudian is an Obsidian plugin that embeds provider-backed coding agents in a sidebar and inline-edit flow. Claude is the default provider. Codex, OpenCode, and Pi are optional providers that plug into the same conversation model through `Conversation.providerId` and opaque provider-owned `providerState`.
-
-Do not assume provider parity. Check each provider's `capabilities.ts`, `registration.ts`, and UI config before wiring shared behavior.
+Kimi Claudian is an Obsidian plugin that embeds Kimi Code CLI in a sidebar and inline-edit flow. Kimi is the only provider. Provider-owned session state is stored opaque in `Conversation.providerState`.
 
 ## Instruction Map
 
@@ -13,10 +11,7 @@ Do not assume provider parity. Check each provider's `capabilities.ts`, `registr
 - Before editing a scoped area, read its nearest scoped guide:
   - `src/core/AGENTS.md`
   - `src/features/chat/AGENTS.md`
-  - `src/providers/claude/AGENTS.md`
-  - `src/providers/codex/AGENTS.md`
-  - `src/providers/opencode/AGENTS.md`
-  - `src/providers/pi/AGENTS.md`
+  - `src/providers/kimi/AGENTS.md`
   - `src/style/AGENTS.md`
 
 ## Commands
@@ -38,7 +33,7 @@ Use focused commands while iterating. Before handing off code changes, run the n
 npm run typecheck && npm run lint && npm run test && npm run build
 ```
 
-Tests mirror `src/` under `tests/unit/` and `tests/integration/`.
+Tests mirror `src/` under `tests/unit/`.
 
 ## Architecture
 
@@ -46,42 +41,30 @@ Tests mirror `src/` under `tests/unit/` and `tests/integration/`.
 | --- | --- |
 | `src/app/` | Shared settings defaults and plugin-level storage helpers |
 | `src/core/` | Provider-neutral runtime, registry, storage, tool, and type contracts |
-| `src/providers/*/` | Provider adaptors, provider-owned runtime protocol, history, storage, settings, and UI |
+| `src/providers/kimi/` | Kimi Code CLI adaptor, ACP runtime protocol, history, storage, settings, and UI |
 | `src/features/chat/` | Sidebar chat orchestration against provider-neutral contracts |
 | `src/features/inline-edit/` | Inline edit modal and provider-backed edit services |
 | `src/features/settings/` | Shared settings shell and provider tab assembly |
 | `src/shared/` | Reusable UI components |
 | `src/style/` | Modular CSS built into `styles.css` |
 
-The feature layer depends on `core/` contracts, not provider internals. Provider-specific session fields belong behind typed helpers in the owning provider directory.
+The feature layer depends on `core/` contracts, not Kimi internals. Kimi-specific session fields belong behind typed helpers in `src/providers/kimi/types/`.
 
 ## Provider Rules
 
-- Prefer provider-native behavior over local reimplementation. Adapt provider output at the boundary instead of shadowing provider features.
-- Keep live streaming and history replay responsibilities separate. Live output should come from the provider runtime protocol when available; provider transcript files are the replay source.
-- New provider behavior must be expressed through registries and capabilities: `ProviderRegistry`, `ProviderWorkspaceRegistry`, `ProviderChatUIConfig`, provider capabilities, and provider-owned settings reconciliation.
-- Model, permission, plan-mode, command, MCP, skill, and subagent behavior is provider-specific unless the core contract explicitly makes it shared.
-- When provider behavior is uncertain, inspect real runtime output first. Put throwaway scripts, traces, and handoff notes in `.context/`.
+- Prefer Kimi-native behavior over local reimplementation. Adapt Kimi output at the boundary instead of shadowing Kimi features.
+- Keep live streaming and history replay responsibilities separate. Live output comes from the ACP runtime protocol; Kimi `context.jsonl` / `wire.jsonl` files are the replay source.
+- New behavior must be expressed through registries and capabilities: `ProviderRegistry`, `ProviderWorkspaceRegistry`, `ProviderChatUIConfig`, provider capabilities, and provider-owned settings reconciliation.
+- When Kimi behavior is uncertain, inspect real runtime output first. Put throwaway scripts, traces, and handoff notes in `.context/`.
 
 ## Storage
 
 | Path | Contents |
 | --- | --- |
-| `.claudian/claudian-settings.json` | Shared Claudian settings and provider-specific configuration |
+| `.claudian/claudian-settings.json` | Shared Kimi Claudian settings and Kimi provider configuration |
 | `.claudian/sessions/*.meta.json` | Provider-neutral session metadata |
-| `.claude/settings.json` | Claude Code-compatible project settings, permissions, and plugin overrides |
-| `.claude/mcp.json` | Claudian-managed MCP servers for Claude |
-| `.claude/commands/**/*.md` | Claude slash commands |
-| `.claude/skills/*/SKILL.md` | Claude skills |
-| `.claude/agents/*.md` | Claude vault agents |
-| `.codex/skills/*/SKILL.md` | Codex vault skills |
-| `.agents/skills/*/SKILL.md` | Alternate Codex vault skill root |
-| `.codex/agents/*.toml` | Codex vault subagent definitions |
-| `.opencode/agent`, `.opencode/agents` | OpenCode agent definitions |
-| `.pi/agent/sessions/` | Pi vault-local sessions |
-| `~/.claude/projects/{vault}/*.jsonl` | Claude-native transcripts |
-| `~/.codex/sessions/**/*.jsonl` | Codex-native transcripts |
-| `~/.pi/agent/sessions/` | Pi user-level sessions |
+| `~/.kimi/config.toml` | Kimi Code CLI user-level configuration |
+| `~/.kimi/sessions/{vault_hash}/{session_id}/` | Kimi-native sessions (state.json, context.jsonl, wire.jsonl) |
 
 ## Development Rules
 
@@ -89,7 +72,7 @@ The feature layer depends on `core/` contracts, not provider internals. Provider
 - Write code, comments, identifiers, commit messages, and code blocks in English.
 - Keep comments sparse. Explain non-obvious intent, protocol constraints, or invariants; do not narrate obvious code.
 - Do not use `console.*` in production code.
-- Preserve user data and provider-native files. Settings writers should merge with existing provider-owned data instead of clobbering it.
+- Preserve user data and Kimi-native files. Settings writers should merge with existing Kimi-owned data instead of clobbering it.
 - Put non-committed notes, handoff files, traces, and throwaway scripts in `.context/`.
 - Do not add new production dependencies without a clear need and an explicit tradeoff.
 

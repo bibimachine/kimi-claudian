@@ -6,7 +6,6 @@ import {
   normalizeHiddenCommandList,
   normalizeHiddenProviderCommands,
 } from '../../core/providers/commands/hiddenCommands';
-import { setProviderConfig } from '../../core/providers/providerConfig';
 import {
   getSharedEnvironmentVariables,
   inferEnvironmentSnippetScope,
@@ -23,20 +22,9 @@ import {
   type ProviderConfigMap,
 } from '../../core/types/settings';
 import {
-  getClaudeProviderSettings,
-  updateClaudeProviderSettings,
-} from '../../providers/claude/settings';
-import {
-  normalizeCodexStoredConfig,
-} from '../../providers/codex/settings';
-import {
-  getOpencodeProviderSettings,
-  updateOpencodeProviderSettings,
-} from '../../providers/opencode/settings';
-import {
-  getPiProviderSettings,
-  updatePiProviderSettings,
-} from '../../providers/pi/settings';
+  getKimiProviderSettings,
+  updateKimiProviderSettings,
+} from '../../providers/kimi/settings';
 import { DEFAULT_CLAUDIAN_SETTINGS } from './defaultSettings';
 
 export {
@@ -133,10 +121,7 @@ function normalizeProviderConfigs(value: unknown): ProviderConfigMap {
 }
 
 const HOST_SCOPED_PROVIDER_CONFIG_FIELDS: Record<string, string[]> = {
-  claude: ['cliPathsByHost'],
-  codex: ['cliPathsByHost', 'installationMethodsByHost', 'wslDistroOverridesByHost'],
-  opencode: ['cliPathsByHost'],
-  pi: ['cliPathsByHost'],
+  kimi: ['cliPathsByHost'],
 };
 
 function hasHostScopedProviderConfigNormalization(
@@ -317,19 +302,9 @@ export class ClaudianSettingsStorage {
       ...legacyNormalized,
     };
 
-    updateClaudeProviderSettings(
+    updateKimiProviderSettings(
       merged,
-      getClaudeProviderSettings(legacyProviderSettings),
-    );
-    const codexConfigNormalization = normalizeCodexStoredConfig(legacyProviderSettings);
-    setProviderConfig(merged, 'codex', codexConfigNormalization.config);
-    updateOpencodeProviderSettings(
-      merged,
-      getOpencodeProviderSettings(legacyProviderSettings),
-    );
-    updatePiProviderSettings(
-      merged,
-      getPiProviderSettings(legacyProviderSettings),
+      getKimiProviderSettings(legacyProviderSettings),
     );
     const didNormalizeHostScopedProviderConfigs = hasHostScopedProviderConfigNormalization(
       providerConfigs,
@@ -354,7 +329,6 @@ export class ClaudianSettingsStorage {
         'customModelAliases' in stored
         && JSON.stringify(customModelAliases) !== JSON.stringify(stored.customModelAliases ?? {})
       )
-      || codexConfigNormalization.changed
       || didNormalizeHostScopedProviderConfigs
       )
     ) {
@@ -393,17 +367,14 @@ export class ClaudianSettingsStorage {
       return;
     }
 
-    const current = await this.load();
-    updateClaudeProviderSettings(
-      current,
-      { lastModel: model },
-    );
-    await this.save(current);
+    // Kimi tracks the active model through the shared settings bag; nothing
+    // provider-specific to persist here.
+    void model;
   }
 
   async setLastEnvHash(hash: string): Promise<void> {
     const current = await this.load();
-    updateClaudeProviderSettings(
+    updateKimiProviderSettings(
       current,
       { environmentHash: hash },
     );

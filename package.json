@@ -1,7 +1,7 @@
 {
-  "name": "claudian",
+  "name": "kimi-claudian",
   "version": "2.0.29",
-  "description": "Claudian - Claude Code embedded in Obsidian sidebar",
+  "description": "Kimi Claudian - Kimi Code CLI embedded in Obsidian sidebar",
   "main": "main.js",
   "engines": {
     "node": ">=24 <25"
@@ -20,13 +20,14 @@
     "version": "node scripts/sync-version.js && git add manifest.json"
   },
   "keywords": [
-    "claude-code",
+    "kimi",
+    "kimi-code",
     "obsidian",
     "obsidian-plugin",
     "productivity",
     "ide"
   ],
-  "author": "Yishen Tu",
+  "author": "bibimachine",
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^10.0.1",

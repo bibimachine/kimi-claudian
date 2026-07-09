@@ -39,7 +39,6 @@ import { type InlineEditContext, InlineEditModal } from './features/inline-edit/
 import { ClaudianSettingTab } from './features/settings/ClaudianSettings';
 import { setLocale } from './i18n/i18n';
 import type { Locale } from './i18n/types';
-import { OPENCODE_PLAN_MODE_ID, OPENCODE_SAFE_MODE_ID } from './providers/opencode/modes';
 import { extractUserDisplayContent } from './utils/context';
 import { buildCursorContext } from './utils/editor';
 import { revealWorkspaceLeaf } from './utils/obsidianCompat';
@@ -303,16 +302,6 @@ export default class ClaudianPlugin extends Plugin {
         }
       }
     }
-    const opencodeConfig = this.settings.providerConfigs?.opencode;
-    if (
-      opencodeConfig
-      && typeof opencodeConfig === 'object'
-      && !Array.isArray(opencodeConfig)
-      && opencodeConfig.selectedMode === OPENCODE_PLAN_MODE_ID
-    ) {
-      opencodeConfig.selectedMode = OPENCODE_SAFE_MODE_ID;
-    }
-
     const didNormalizeProviderSelection = ProviderSettingsCoordinator.normalizeProviderSelection(
       this.settings,
     );

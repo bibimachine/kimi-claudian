@@ -7,9 +7,9 @@ export const DEFAULT_CLAUDIAN_SETTINGS: ClaudianSettings = {
 
   permissionMode: 'yolo',
 
-  model: 'haiku',
+  model: 'kimi:kimi-code/kimi-for-coding',
   thinkingBudget: 'off',
-  effortLevel: 'high',
+  effortLevel: 'default',
   serviceTier: 'default',
   enableAutoTitleGeneration: true,
   titleGenerationModel: '',
@@ -35,7 +35,7 @@ export const DEFAULT_CLAUDIAN_SETTINGS: ClaudianSettings = {
 
   providerConfigs: getBuiltInProviderDefaultConfigs(),
 
-  settingsProvider: 'claude',
+  settingsProvider: 'kimi',
   savedProviderModel: {},
   savedProviderEffort: {},
   savedProviderServiceTier: {},

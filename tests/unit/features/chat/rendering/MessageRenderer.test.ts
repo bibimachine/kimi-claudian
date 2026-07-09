@@ -6,9 +6,7 @@ import { Menu } from 'obsidian';
 import {
   TOOL_AGENT_OUTPUT,
   TOOL_APPLY_PATCH,
-  TOOL_SPAWN_AGENT,
   TOOL_TASK,
-  TOOL_WAIT_AGENT,
   TOOL_WRITE_STDIN,
 } from '@/core/tools/toolNames';
 import type { ChatMessage, ImageAttachment } from '@/core/types';
@@ -49,25 +47,25 @@ function createMockComponent() {
   };
 }
 
-function mockCapabilities(providerId: 'claude' | 'codex' = 'claude') {
+function mockCapabilities(providerId: 'kimi' = 'kimi') {
   return () => ({
     providerId,
     supportsPersistentRuntime: true,
-    supportsNativeHistory: providerId === 'claude',
+    supportsNativeHistory: true,
     supportsPlanMode: true,
-    supportsRewind: true,
-    supportsFork: true,
+    supportsRewind: false,
+    supportsFork: false,
     supportsProviderCommands: true,
     supportsImageAttachments: true,
     supportsInstructionMode: true,
-    supportsMcpTools: true,
+    supportsMcpTools: false,
     reasoningControl: 'effort' as const,
   });
 }
 
 function createRenderer(
   messagesEl?: any,
-  providerId: 'claude' | 'codex' = 'claude',
+  providerId: 'kimi' = 'kimi',
   settings: Record<string, unknown> = {},
 ) {
   const el = messagesEl ?? createMockEl();
@@ -329,49 +327,6 @@ describe('MessageRenderer', () => {
     expect(renderImagesSpy).toHaveBeenCalledWith(messagesEl, images);
   });
 
-  it('adds a rewind button for eligible stored user messages', () => {
-    const messagesEl = createMockEl();
-    const rewindCallback = jest.fn().mockResolvedValue(undefined);
-    const renderer = new MessageRenderer({ app: {}, settings: { mediaFolder: '' } } as any, createMockComponent() as any, messagesEl, rewindCallback, undefined, mockCapabilities());
-    jest.spyOn(renderer, 'renderContent').mockResolvedValue(undefined);
-
-    const allMessages: ChatMessage[] = [
-      { id: 'a1', role: 'assistant', content: '', timestamp: 1, assistantMessageId: 'prev-a' },
-      { id: 'u1', role: 'user', content: 'hello', timestamp: 2, userMessageId: 'user-u' },
-      { id: 'a2', role: 'assistant', content: '', timestamp: 3, assistantMessageId: 'resp-a' },
-    ];
-
-    renderer.renderStoredMessage(allMessages[1], allMessages, 1);
-
-    expect(messagesEl.querySelector('.claudian-message-rewind-btn')).not.toBeNull();
-  });
-
-  it('adds rewind but not fork for a completed first user message', () => {
-    const messagesEl = createMockEl();
-    const rewindCallback = jest.fn().mockResolvedValue(undefined);
-    const forkCallback = jest.fn().mockResolvedValue(undefined);
-    const renderer = new MessageRenderer(
-      { app: {}, settings: { mediaFolder: '' } } as any,
-      createMockComponent() as any,
-      messagesEl,
-      rewindCallback,
-      forkCallback,
-      mockCapabilities(),
-    );
-    jest.spyOn(renderer, 'renderContent').mockResolvedValue(undefined);
-
-    const allMessages: ChatMessage[] = [
-      { id: 'u1', role: 'user', content: 'hello', timestamp: 1, userMessageId: 'user-u' },
-      { id: 'a1', role: 'assistant', content: 'response', timestamp: 2, assistantMessageId: 'resp-a' },
-    ];
-
-    renderer.renderStoredMessage(allMessages[0], allMessages, 0);
-
-    expect(messagesEl.querySelector('.claudian-message-rewind-btn')).not.toBeNull();
-    expect(messagesEl.querySelector('.claudian-message-fork-btn')).toBeNull();
-    expect((renderer as any).liveMessageEls.has('u1')).toBe(false);
-  });
-
   it('does not add a rewind button when stored render is called without context', () => {
     const messagesEl = createMockEl();
     const rewindCallback = jest.fn().mockResolvedValue(undefined);
@@ -389,77 +344,6 @@ describe('MessageRenderer', () => {
     renderer.renderStoredMessage(msg);
 
     expect(messagesEl.querySelector('.claudian-message-rewind-btn')).toBeNull();
-  });
-
-  it('shows rewind mode menu for eligible streamed user messages', async () => {
-    const messagesEl = createMockEl();
-    const rewindCallback = jest.fn().mockResolvedValue(undefined);
-    const renderer = new MessageRenderer({ app: {}, settings: { mediaFolder: '' } } as any, createMockComponent() as any, messagesEl, rewindCallback, undefined, mockCapabilities());
-    jest.spyOn(renderer, 'renderContent').mockResolvedValue(undefined);
-
-    const userMsg: ChatMessage = {
-      id: 'u1',
-      role: 'user',
-      content: 'hello',
-      timestamp: 2,
-      userMessageId: 'user-u',
-    };
-    renderer.addMessage(userMsg);
-
-    const allMessages: ChatMessage[] = [
-      { id: 'a1', role: 'assistant', content: '', timestamp: 1, assistantMessageId: 'prev-a' },
-      userMsg,
-      { id: 'a2', role: 'assistant', content: '', timestamp: 3, assistantMessageId: 'resp-a' },
-    ];
-
-    renderer.refreshActionButtons(userMsg, allMessages, 1);
-
-    const btn = messagesEl.querySelector('.claudian-message-rewind-btn');
-    expect(btn).not.toBeNull();
-
-    btn!.click();
-    const menu = (Menu as typeof Menu & { instances: any[] }).instances[0];
-    expect(menu.items.map((item: any) => item.title)).toEqual([
-      'Rewind conversation only',
-      'Rewind code + conversation',
-    ]);
-
-    menu.items[0].clickHandler?.();
-    await Promise.resolve();
-
-    expect(rewindCallback).toHaveBeenCalledWith('u1', 'conversation');
-  });
-
-  it('refreshes rewind but not fork for a streamed first user message', () => {
-    const messagesEl = createMockEl();
-    const rewindCallback = jest.fn().mockResolvedValue(undefined);
-    const forkCallback = jest.fn().mockResolvedValue(undefined);
-    const renderer = new MessageRenderer(
-      { app: {}, settings: { mediaFolder: '' } } as any,
-      createMockComponent() as any,
-      messagesEl,
-      rewindCallback,
-      forkCallback,
-      mockCapabilities(),
-    );
-    jest.spyOn(renderer, 'renderContent').mockResolvedValue(undefined);
-
-    const userMsg: ChatMessage = {
-      id: 'u1',
-      role: 'user',
-      content: 'hello',
-      timestamp: 1,
-      userMessageId: 'user-u',
-    };
-    renderer.addMessage(userMsg);
-
-    renderer.refreshActionButtons(userMsg, [
-      userMsg,
-      { id: 'a1', role: 'assistant', content: 'response', timestamp: 2, assistantMessageId: 'resp-a' },
-    ], 0);
-
-    expect(messagesEl.querySelector('.claudian-message-rewind-btn')).not.toBeNull();
-    expect(messagesEl.querySelector('.claudian-message-fork-btn')).toBeNull();
   });
 
   // ============================================
@@ -546,7 +430,7 @@ describe('MessageRenderer', () => {
 
   it('passes expanded file-edit default to stored Write/Edit renderer', () => {
     const messagesEl = createMockEl();
-    const { renderer } = createRenderer(messagesEl, 'claude', { expandFileEditsByDefault: true });
+    const { renderer } = createRenderer(messagesEl, 'kimi', { expandFileEditsByDefault: true });
 
     const msg: ChatMessage = {
       id: 'm-write-expanded',
@@ -596,7 +480,7 @@ describe('MessageRenderer', () => {
 
   it('does not render stored Codex write_stdin transport tools', () => {
     const messagesEl = createMockEl();
-    const { renderer } = createRenderer(messagesEl, 'codex');
+    const { renderer } = createRenderer(messagesEl, 'kimi');
 
     const msg: ChatMessage = {
       id: 'm1',
@@ -625,7 +509,7 @@ describe('MessageRenderer', () => {
 
   it('renders stored Codex write_stdin tools when they send real input', () => {
     const messagesEl = createMockEl();
-    const { renderer } = createRenderer(messagesEl, 'codex');
+    const { renderer } = createRenderer(messagesEl, 'kimi');
 
     const msg: ChatMessage = {
       id: 'm1',
@@ -662,7 +546,7 @@ describe('MessageRenderer', () => {
 
   it('passes expanded file-edit default to stored apply_patch renderer', () => {
     const messagesEl = createMockEl();
-    const { renderer } = createRenderer(messagesEl, 'codex', { expandFileEditsByDefault: true });
+    const { renderer } = createRenderer(messagesEl, 'kimi', { expandFileEditsByDefault: true });
 
     const msg: ChatMessage = {
       id: 'm-apply-patch-expanded',
@@ -1495,172 +1379,6 @@ describe('MessageRenderer', () => {
 
     expect(welcomeEl).toBeDefined();
     expect(welcomeEl!.hasClass('claudian-welcome')).toBe(true);
-  });
-
-  // ============================================
-  // Task tool rendering - error and running status
-  // ============================================
-
-  describe('Task tool rendering - error and running status', () => {
-    it('renders Task tool with error status as subagent with status error', () => {
-      const messagesEl = createMockEl();
-      const { renderer } = createRenderer(messagesEl, 'codex');
-
-      (renderStoredSubagent as jest.Mock).mockClear();
-
-      const msg: ChatMessage = {
-        id: 'm1',
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-        toolCalls: [
-          {
-            id: 'task-err',
-            name: TOOL_TASK,
-            input: { description: 'Failing task' },
-            status: 'error',
-            result: 'Something went wrong',
-          } as any,
-        ],
-        contentBlocks: [
-          { type: 'tool_use', toolId: 'task-err' } as any,
-        ],
-      };
-
-      renderer.renderStoredMessage(msg);
-
-      expect(renderStoredSubagent).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          id: 'task-err',
-          description: 'Failing task',
-          status: 'error',
-          result: 'Something went wrong',
-        })
-      );
-    });
-
-    it('renders Task tool with running status (default case in switch)', () => {
-      const messagesEl = createMockEl();
-      const { renderer } = createRenderer(messagesEl, 'codex');
-
-      (renderStoredSubagent as jest.Mock).mockClear();
-
-      const msg: ChatMessage = {
-        id: 'm1',
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-        toolCalls: [
-          {
-            id: 'task-run',
-            name: TOOL_TASK,
-            input: { description: 'Running task' },
-            status: 'pending',
-          } as any,
-        ],
-        contentBlocks: [
-          { type: 'tool_use', toolId: 'task-run' } as any,
-        ],
-      };
-
-      renderer.renderStoredMessage(msg);
-
-      expect(renderStoredSubagent).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          id: 'task-run',
-          description: 'Running task',
-          status: 'running',
-        })
-      );
-    });
-
-    it('renders Task tool with no description uses fallback Subagent task', () => {
-      const messagesEl = createMockEl();
-      const { renderer } = createRenderer(messagesEl);
-
-      (renderStoredSubagent as jest.Mock).mockClear();
-
-      const msg: ChatMessage = {
-        id: 'm1',
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-        toolCalls: [
-          {
-            id: 'task-no-desc',
-            name: TOOL_TASK,
-            input: {},
-            status: 'completed',
-            result: 'Done',
-          } as any,
-        ],
-        contentBlocks: [
-          { type: 'tool_use', toolId: 'task-no-desc' } as any,
-        ],
-      };
-
-      renderer.renderStoredMessage(msg);
-
-      expect(renderStoredSubagent).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          id: 'task-no-desc',
-          description: 'Subagent task',
-          status: 'completed',
-        })
-      );
-    });
-
-    it('renders Codex spawn_agent with the same prompt and result recovered on reload', () => {
-      const messagesEl = createMockEl();
-      const { renderer } = createRenderer(messagesEl, 'codex');
-
-      (renderStoredSubagent as jest.Mock).mockClear();
-
-      const msg: ChatMessage = {
-        id: 'm-codex-subagent',
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-        toolCalls: [
-          {
-            id: 'spawn-1',
-            name: TOOL_SPAWN_AGENT,
-            input: {
-              message: 'Inspect utils.ts and return the final patch summary.',
-              model: 'gpt-5.4-mini',
-            },
-            status: 'completed',
-            result: '{"agent_id":"agent-1","nickname":"Zeno"}',
-          } as any,
-          {
-            id: 'wait-1',
-            name: TOOL_WAIT_AGENT,
-            input: { targets: ['agent-1'], timeout_ms: 30000 },
-            status: 'completed',
-            result: '{"status":{"agent-1":{"completed":"Patched utils.ts and verified imports."}},"timed_out":false}',
-          } as any,
-        ],
-        contentBlocks: [
-          { type: 'tool_use', toolId: 'spawn-1' } as any,
-        ],
-      };
-
-      renderer.renderStoredMessage(msg);
-
-      expect(renderStoredSubagent).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          id: 'spawn-1',
-          description: 'Zeno (gpt-5.4-mini)',
-          prompt: 'Inspect utils.ts and return the final patch summary.',
-          status: 'completed',
-          result: 'Patched utils.ts and verified imports.',
-        })
-      );
-    });
   });
 
   // ============================================
