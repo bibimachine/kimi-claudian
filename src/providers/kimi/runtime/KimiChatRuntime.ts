@@ -147,6 +147,7 @@ export class KimiChatRuntime implements ChatRuntime {
   private connection: AcpClientConnection | null = null;
   private contextUsage: AcpUsageUpdate | null = null;
   private currentLaunchKey: string | null = null;
+  private lastStartError: string | null = null;
   private currentSessionEffortConfigId: string | null = null;
   private currentSessionEffortValue: string | null = null;
   private currentSessionEffortValues = new Set<string>();
@@ -286,11 +287,19 @@ export class KimiChatRuntime implements ChatRuntime {
 
     if (shouldRestart) {
       await this.shutdownProcess();
-      await this.startProcess({
-        command: resolvedCliPath,
-        cwd,
-        runtimeEnv,
-      });
+      try {
+        await this.startProcess({
+          command: resolvedCliPath,
+          cwd,
+          runtimeEnv,
+        });
+        this.lastStartError = null;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.lastStartError = message;
+        await this.shutdownProcess();
+        return false;
+      }
       this.currentLaunchKey = nextLaunchKey;
       this.loadedSessionId = null;
     }
@@ -330,7 +339,8 @@ export class KimiChatRuntime implements ChatRuntime {
       && (!expectedSessionId || this.sessionInvalidated);
 
     if (!(await this.ensureReady())) {
-      yield { type: 'error', content: 'Failed to start Kimi Code CLI. Check the CLI path and login state.' };
+      const detail = this.lastStartError ? `\n${this.lastStartError}` : '';
+      yield { type: 'error', content: `Failed to start Kimi Code CLI. Check the CLI path and login state.${detail}` };
       yield { type: 'done' };
       return;
     }
@@ -576,12 +586,19 @@ export class KimiChatRuntime implements ChatRuntime {
     };
 
     this.process = new AcpSubprocess({
-      args: ['acp'],
+      args: ['acp', `--cwd=${params.cwd}`],
       command: params.command,
       cwd: params.cwd,
       env: processEnv,
     });
     this.process.start();
+
+    // Give the CLI a moment to fail fast (e.g. missing binary / auth errors).
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 300));
+    if (!this.process.isAlive()) {
+      const stderr = this.process.getStderrSnapshot();
+      throw new Error(stderr ? `Kimi Code CLI exited: ${stderr}` : 'Kimi Code CLI exited immediately.');
+    }
 
     this.transport = new AcpJsonRpcTransport({
       input: this.process.stdout,
@@ -597,7 +614,7 @@ export class KimiChatRuntime implements ChatRuntime {
 
     this.connection = new AcpClientConnection({
       clientInfo: {
-        name: 'claudian',
+        name: 'kimi-claudian',
         version: this.plugin.manifest?.version ?? '0.0.0',
       },
       delegate: {
@@ -611,8 +628,14 @@ export class KimiChatRuntime implements ChatRuntime {
       transport: this.transport,
     });
 
-    this.transport.start();
-    await this.connection.initialize();
+    try {
+      this.transport.start();
+      await this.connection.initialize();
+    } catch (error) {
+      const stderr = this.process?.getStderrSnapshot() ?? '';
+      const base = error instanceof Error ? error.message : String(error);
+      throw new Error(stderr ? `${base}\n${stderr}` : base, { cause: error });
+    }
     this.setReady(true);
   }
 
