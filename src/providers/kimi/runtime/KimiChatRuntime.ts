@@ -255,6 +255,7 @@ export class KimiChatRuntime implements ChatRuntime {
     const settings = getKimiProviderSettings(this.plugin.settings);
     if (!settings.enabled) {
       this.setReady(false);
+      this.lastStartError = 'Kimi provider is disabled. Enable it in Settings → Kimi.';
       return false;
     }
 

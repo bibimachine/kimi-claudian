@@ -50,7 +50,7 @@ export const KIMI_DEFAULT_ENVIRONMENT_VARIABLES = 'KIMI_ENABLE_EXA=1';
 export const DEFAULT_KIMI_PROVIDER_SETTINGS: Readonly<PersistedKimiProviderSettings> = Object.freeze({
   cliPath: '',
   cliPathsByHost: {},
-  enabled: false,
+  enabled: true,
   environmentHash: '',
   environmentVariables: KIMI_DEFAULT_ENVIRONMENT_VARIABLES,
   modelAliases: {},
