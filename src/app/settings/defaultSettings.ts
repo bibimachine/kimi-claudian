@@ -1,5 +1,6 @@
 import { getDefaultHiddenProviderCommands } from '../../core/providers/commands/hiddenCommands';
 import { type ClaudianSettings } from '../../core/types/settings';
+import { DEFAULT_WECHAT_BOT_SETTINGS } from '../../im/wechat/settings';
 import { getBuiltInProviderDefaultConfigs } from '../../providers/defaultProviderConfigs';
 
 export const DEFAULT_CLAUDIAN_SETTINGS: ClaudianSettings = {
@@ -51,4 +52,6 @@ export const DEFAULT_CLAUDIAN_SETTINGS: ClaudianSettings = {
   chatViewPlacement: 'right-sidebar',
 
   hiddenProviderCommands: getDefaultHiddenProviderCommands(),
+
+  wechatBot: { ...DEFAULT_WECHAT_BOT_SETTINGS },
 };

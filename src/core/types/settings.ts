@@ -1,5 +1,13 @@
 export type HiddenProviderCommands = Record<string, string[]>;
 
+export interface WechatBotSettings {
+  enabled: boolean;
+  allowedContact: string;
+  systemPrompt: string;
+  autoApproveTools: boolean;
+  maxHistoryMessages: number;
+}
+
 export interface ApprovalSelectionDecision {
   type: 'select-option';
   value: string;
@@ -146,6 +154,9 @@ export interface ClaudianSettings {
 
   // Provider command visibility
   hiddenProviderCommands: HiddenProviderCommands;
+
+  // WeChat Bot settings
+  wechatBot: WechatBotSettings;
 
   // Allow provider-specific extension fields
   [key: string]: unknown;

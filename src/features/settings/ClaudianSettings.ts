@@ -15,6 +15,7 @@ import type ClaudianPlugin from '../../main';
 import { formatContextLimit, parseContextLimit, parseEnvironmentVariables } from '../../utils/env';
 import { buildNavMappingText, parseNavMappings } from './keyboardNavigation';
 import { renderEnvironmentSettingsSection } from './ui/EnvironmentSettingsSection';
+import { renderWechatBotSettingsSection } from './ui/WechatBotSettingsSection';
 
 type SettingsTabId = string;
 type ObsidianHotkey = { modifiers: string[]; key: string };
@@ -498,6 +499,10 @@ export class ClaudianSettingTab extends PluginSettingTab {
       placeholder: 'PATH=/opt/homebrew/bin:/usr/local/bin\nHTTPS_PROXY=http://proxy.example.com:8080\nSSL_CERT_FILE=/path/to/cert.pem',
       renderCustomContextLimits: (target) => this.renderCustomContextLimits(target),
     });
+
+    // --- WeChat Bot ---
+
+    renderWechatBotSettingsSection(container, this.plugin);
   }
 
   private renderHiddenProviderCommandSetting(

@@ -4,6 +4,8 @@ patchSetMaxListenersForElectron();
 
 import './providers';
 
+import * as path from 'node:path';
+
 import type { Editor, WorkspaceLeaf } from 'obsidian';
 import { MarkdownView, Notice, Plugin } from 'obsidian';
 
@@ -39,6 +41,10 @@ import { type InlineEditContext, InlineEditModal } from './features/inline-edit/
 import { ClaudianSettingTab } from './features/settings/ClaudianSettings';
 import { setLocale } from './i18n/i18n';
 import type { Locale } from './i18n/types';
+import { ImReplyService } from './im/ImReplyService';
+import { ImSessionStorage } from './im/ImSessionStorage';
+import { getWechatBotSettings } from './im/wechat/settings';
+import { WechatGateway } from './im/wechat/WechatGateway';
 import { extractUserDisplayContent } from './utils/context';
 import { buildCursorContext } from './utils/editor';
 import { revealWorkspaceLeaf } from './utils/obsidianCompat';
@@ -55,10 +61,13 @@ export default class ClaudianPlugin extends Plugin {
   storage!: SharedAppStorage;
   private conversations: Conversation[] = [];
   private lastKnownTabManagerState: AppTabManagerState | null = null;
+  private wechatGateway: WechatGateway | null = null;
+  private wechatReplyService: ImReplyService | null = null;
 
   async onload() {
     await this.loadSettings();
     await ProviderWorkspaceRegistry.initializeAll(this);
+    this.initializeWechatGateway();
 
     this.registerView(
       VIEW_TYPE_CLAUDIAN,
@@ -183,6 +192,7 @@ export default class ClaudianPlugin extends Plugin {
 
   onunload(): void {
     void this.persistOpenTabStates();
+    void this.stopWechatGateway();
   }
 
   private async persistOpenTabStates(): Promise<void> {
@@ -274,6 +284,46 @@ export default class ClaudianPlugin extends Plugin {
     }
 
     await view.createNewTab();
+  }
+
+  getWechatGateway(): WechatGateway | null {
+    return this.wechatGateway;
+  }
+
+  private initializeWechatGateway(): void {
+    const vaultPath = getVaultPath(this.app);
+    if (!vaultPath) {
+      return;
+    }
+
+    const dataDir = path.join(vaultPath, '.claudian', 'wechat-bot');
+    const settings = getWechatBotSettings(this.settings as unknown as Record<string, unknown>);
+
+    const storage = new ImSessionStorage({ dataDir, maxHistoryMessages: settings.maxHistoryMessages });
+    this.wechatReplyService = new ImReplyService({ plugin: this, storage });
+
+    this.wechatGateway = new WechatGateway({ dataDir });
+    this.wechatGateway.onIncomingMessage((msg) => {
+      void this.wechatReplyService?.handleIncomingMessage(this.wechatGateway!, msg);
+    });
+
+    if (settings.enabled) {
+      void this.wechatGateway.start().catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+         
+        console.error('Failed to start WeChat gateway:', message);
+      });
+    }
+  }
+
+  private async stopWechatGateway(): Promise<void> {
+    await this.wechatGateway?.stop();
+    await this.wechatReplyService?.stopAll();
+  }
+
+  async reloadWechatGateway(): Promise<void> {
+    await this.stopWechatGateway();
+    this.initializeWechatGateway();
   }
 
   async loadSettings() {
