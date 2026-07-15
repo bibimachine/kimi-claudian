@@ -72,11 +72,15 @@ export class ILinkClient {
 
   async poll(abortSignal?: AbortSignal): Promise<GetUpdatesResp> {
     try {
-      return await this.post<GetUpdatesResp>(
+      const resp = await this.post<GetUpdatesResp>(
         'ilink/bot/getupdates',
         { get_updates_buf: this.syncBuf },
         this.opts.longPollTimeoutMs,
       );
+      if (resp.get_updates_buf) {
+        this.syncBuf = resp.get_updates_buf;
+      }
+      return resp;
     } catch (error) {
       if (error instanceof Error && error.message === 'request timeout') {
         return { ret: 0, msgs: [], get_updates_buf: this.syncBuf };

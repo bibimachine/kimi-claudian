@@ -6,6 +6,16 @@
   color: var(--text-normal);
 }
 
+.claudian-wechat-enable-status {
+  margin: -8px 0 12px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.claudian-wechat-enable-status.claudian-hidden {
+  display: none;
+}
+
 .claudian-wechat-qr-container {
   margin: 12px 0;
   padding: 12px;

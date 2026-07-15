@@ -116,7 +116,8 @@ export class WechatPanel {
     this.renderContacts();
     if (this.selectedContactId === msg.fromUserId) {
       this.selectContact(msg.fromUserId);
-    } else if (this.isVisible()) {
+    } else if (!this.isVisible()) {
+      // Only notify when the panel is closed; when open the contact list already shows updates.
       new Notice(`New wechat message from ${msg.fromUserName || msg.fromUserId}`);
     }
   }

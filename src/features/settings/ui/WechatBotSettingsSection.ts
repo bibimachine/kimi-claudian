@@ -14,6 +14,7 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
   new Setting(container).setName('Wechat bot').setHeading();
 
   const statusEl = container.createDiv({ cls: 'claudian-wechat-status' });
+  const enableStatusEl = container.createDiv({ cls: 'claudian-wechat-enable-status claudian-hidden' });
   const qrContainer = container.createDiv({ cls: 'claudian-wechat-qr-container claudian-hidden' });
   const logContainer = container.createDiv({ cls: 'claudian-wechat-logs' });
 
@@ -49,12 +50,11 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     }
     statusEl.setText(text);
 
-    const enableNameEl = enableSetting.nameEl;
-    if (enableNameEl) {
-      const baseName = 'Enable wechat bot';
-      enableNameEl.setText(status.state === 'idle' || status.state === 'stopped'
-        ? baseName
-        : `${baseName} — ${text}`);
+    if (status.state === 'idle' || status.state === 'stopped') {
+      enableStatusEl.addClass('claudian-hidden');
+    } else {
+      enableStatusEl.removeClass('claudian-hidden');
+      enableStatusEl.setText(`Status: ${text}`);
     }
 
     if (status.qrCodeUrl && status.state === 'qr_ready') {
@@ -107,7 +107,7 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
 
   let enableToggle: ToggleComponent | null = null;
 
-  const enableSetting = new Setting(container)
+  new Setting(container)
     .setName('Enable wechat bot')
     .setDesc('Connect the wechat gateway.')
     .addToggle((toggle) => {
@@ -133,7 +133,6 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
           }
         });
     });
-  enableSetting.descEl.addClass('claudian-wechat-enable-desc');
 
   const controlSetting = new Setting(container)
     .setName('Gateway control')
