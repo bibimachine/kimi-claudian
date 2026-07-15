@@ -310,8 +310,9 @@ export default class ClaudianPlugin extends Plugin {
     if (settings.enabled) {
       void this.wechatGateway.start().catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
-         
-        console.error('Failed to start WeChat gateway:', message);
+        const stack = error instanceof Error ? error.stack : undefined;
+        console.error('Failed to start WeChat gateway:', message, stack ?? '');
+        new Notice(`WeChat gateway failed: ${message}. Open Settings → Kimi Claudian → WeChat Bot for details.`);
       });
     }
   }
