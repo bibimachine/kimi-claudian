@@ -49,11 +49,12 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     }
     statusEl.setText(text);
 
-    const enableDesc = enableSetting.descEl;
-    if (enableDesc) {
-      enableDesc.setText(status.state === 'idle' || status.state === 'stopped'
-        ? 'Connect the wechat gateway.'
-        : `Status: ${text}`);
+    const enableNameEl = enableSetting.nameEl;
+    if (enableNameEl) {
+      const baseName = 'Enable wechat bot';
+      enableNameEl.setText(status.state === 'idle' || status.state === 'stopped'
+        ? baseName
+        : `${baseName} — ${text}`);
     }
 
     if (status.qrCodeUrl && status.state === 'qr_ready') {
@@ -147,7 +148,7 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
         button.setButtonText('Relogging...');
         const previousState = gateway?.getStatus().state;
         try {
-          await plugin.reloadWechatGateway();
+          await plugin.reloginWechatGateway();
           new Notice('Wechat gateway reloaded');
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);

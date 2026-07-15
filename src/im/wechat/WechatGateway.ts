@@ -174,6 +174,13 @@ export class WechatGateway implements ImGateway {
     this.addLog('system', 'WeChat gateway stopped.');
   }
 
+  /** Stop, clear saved credentials, and start fresh QR login. */
+  async relogin(): Promise<void> {
+    await this.stop();
+    await this.clearCredentials();
+    await this.start();
+  }
+
   async sendText(toUserId: string, content: string): Promise<void> {
     if (!this.client) {
       throw new Error('WeChat gateway is not logged in.');

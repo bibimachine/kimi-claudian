@@ -324,6 +324,10 @@ export default class ClaudianPlugin extends Plugin {
     }
   }
 
+  async reloginWechatGateway(): Promise<void> {
+    await this.wechatGateway?.relogin();
+  }
+
   async loadSettings() {
     this.storage = new SharedStorageService(this);
     const { claudian } = await this.storage.initialize();
