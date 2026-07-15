@@ -318,6 +318,84 @@
       "name": "语言",
       "desc": "更改插件界面的显示语言"
     },
+    "wechatBot": {
+      "heading": "微信机器人",
+      "enable": {
+        "name": "启用微信机器人",
+        "desc": "连接微信网关。"
+      },
+      "status": {
+        "label": "状态：{status}",
+        "idle": "空闲",
+        "starting": "正在启动...",
+        "qrReady": "等待扫码",
+        "loggedIn": "已登录：{userName}",
+        "running": "运行中：{userName}",
+        "error": "错误：{message}",
+        "stopped": "已停止",
+        "unknown": "未知"
+      },
+      "gatewayControl": {
+        "name": "网关控制",
+        "desc": "重新登录或刷新微信网关连接。",
+        "relogin": "重新登录",
+        "relogging": "正在重新登录..."
+      },
+      "allowedContact": {
+        "name": "允许的联系人",
+        "desc": "只回复该联系人的消息（昵称或备注）。留空则回复所有人。",
+        "placeholder": "联系人昵称"
+      },
+      "systemPrompt": {
+        "name": "系统提示词",
+        "desc": "用于微信对话的系统提示词。"
+      },
+      "autoApproveTools": {
+        "name": "自动批准工具",
+        "desc": "允许机器人在微信对话期间自动执行工具，无需显示审批弹窗。请谨慎使用。"
+      },
+      "maxHistoryMessages": {
+        "name": "最大历史消息数",
+        "desc": "为上下文保留的最近消息数量。"
+      },
+      "resetSession": {
+        "name": "重置会话",
+        "desc": "清除当前微信对话历史并开启新的 Kimi 会话。",
+        "reset": "重置",
+        "resetting": "正在重置..."
+      },
+      "networkDiagnostic": {
+        "name": "网络诊断",
+        "desc": "测试 Obsidian 是否能访问微信 iLink 接口。",
+        "testConnection": "测试连接",
+        "testing": "正在测试...",
+        "gatewayNotInitialized": "网关未初始化。"
+      },
+      "events": {
+        "status": "状态",
+        "recentEvents": "最近事件",
+        "noEvents": "暂无事件。"
+      },
+      "qr": {
+        "scanPrompt": "使用微信扫描此二维码：",
+        "loadError": "无法加载二维码图片。请使用重新登录按钮再次打开。",
+        "modalTitle": "使用微信扫描",
+        "modalDesc": "使用微信扫描此二维码以连接机器人。",
+        "fallbackLabel": "如果图片无法加载，请打开此链接：",
+        "done": "完成"
+      },
+      "notice": {
+        "connected": "微信机器人连接成功",
+        "reloaded": "微信网关已重新加载",
+        "failed": "微信机器人启动失败：{message}",
+        "gatewayFailed": "微信网关失败：{message}"
+      },
+      "panel": {
+        "title": "微信对话",
+        "noConversations": "暂无微信对话。",
+        "newMessage": "微信新消息来自 {contact}"
+      }
+    },
     "codex": {
       "enableProvider": {
         "name": "启用 Codex 提供商",

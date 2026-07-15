@@ -449,6 +449,84 @@
       },
       "header": "Subagentes Codex",
       "noAgents": "Não há subagentes Codex no vault. Clique em + para criar um."
+    },
+    "wechatBot": {
+      "heading": "Wechat bot",
+      "enable": {
+        "name": "Enable wechat bot",
+        "desc": "Connect the wechat gateway."
+      },
+      "status": {
+        "label": "Status: {status}",
+        "idle": "Idle",
+        "starting": "Starting...",
+        "qrReady": "Waiting for QR scan",
+        "loggedIn": "Logged in as {userName}",
+        "running": "Running as {userName}",
+        "error": "Error: {message}",
+        "stopped": "Stopped",
+        "unknown": "unknown"
+      },
+      "gatewayControl": {
+        "name": "Gateway control",
+        "desc": "Re-login or refresh the wechat gateway connection.",
+        "relogin": "Re-login",
+        "relogging": "Relogging..."
+      },
+      "allowedContact": {
+        "name": "Allowed contact",
+        "desc": "Only respond to messages from this contact (nickname or remark). Leave empty to respond to anyone.",
+        "placeholder": "Contact nickname"
+      },
+      "systemPrompt": {
+        "name": "System prompt",
+        "desc": "The system prompt used for wechat conversations."
+      },
+      "autoApproveTools": {
+        "name": "Auto-approve tools",
+        "desc": "Allow the bot to execute tools automatically without showing the approval modal. Use with caution."
+      },
+      "maxHistoryMessages": {
+        "name": "Max history messages",
+        "desc": "Number of recent messages to keep for context."
+      },
+      "resetSession": {
+        "name": "Reset session",
+        "desc": "Clear the current wechat conversation history and start a new kimi session.",
+        "reset": "Reset",
+        "resetting": "Resetting..."
+      },
+      "networkDiagnostic": {
+        "name": "Network diagnostic",
+        "desc": "Test whether Obsidian can reach the wechat ilink endpoint.",
+        "testConnection": "Test connection",
+        "testing": "Testing...",
+        "gatewayNotInitialized": "Gateway not initialized."
+      },
+      "events": {
+        "status": "Status",
+        "recentEvents": "Recent events",
+        "noEvents": "No recent events."
+      },
+      "qr": {
+        "scanPrompt": "Scan this qr code with wechat:",
+        "loadError": "Could not load qr image. Use the re-login button to open it again.",
+        "modalTitle": "Scan with wechat",
+        "modalDesc": "Use wechat to scan this qr code to connect the bot.",
+        "fallbackLabel": "If the image does not load, open this link:",
+        "done": "Done"
+      },
+      "notice": {
+        "connected": "Wechat bot connected successfully",
+        "reloaded": "Wechat gateway reloaded",
+        "failed": "Wechat bot failed: {message}",
+        "gatewayFailed": "Wechat gateway failed: {message}"
+      },
+      "panel": {
+        "title": "Wechat conversations",
+        "noConversations": "No wechat conversations yet.",
+        "newMessage": "New wechat message from {contact}"
+      }
     }
   }
 }

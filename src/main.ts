@@ -191,8 +191,12 @@ export default class ClaudianPlugin extends Plugin {
   }
 
   onunload(): void {
-    void this.persistOpenTabStates();
-    void this.stopWechatGateway();
+    this.persistOpenTabStates().catch(() => {
+      // Ignore persistence errors during shutdown.
+    });
+    this.stopWechatGateway().catch(() => {
+      // Ignore stop errors during shutdown.
+    });
   }
 
   private async persistOpenTabStates(): Promise<void> {

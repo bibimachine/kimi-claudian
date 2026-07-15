@@ -108,6 +108,7 @@ function addHotkeySettingRow(
 export class ClaudianSettingTab extends PluginSettingTab {
   plugin: ClaudianPlugin;
   private activeTab: SettingsTabId = 'general';
+  private wechatCleanup?: () => void;
 
   constructor(app: App, plugin: ClaudianPlugin) {
     super(app, plugin);
@@ -116,6 +117,8 @@ export class ClaudianSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
+    this.wechatCleanup?.();
+    this.wechatCleanup = undefined;
     containerEl.empty();
     containerEl.addClass('claudian-settings');
 
@@ -179,6 +182,12 @@ export class ClaudianSettingTab extends PluginSettingTab {
         renderCustomContextLimits: (target, providerId) => this.renderCustomContextLimits(target, providerId),
       });
     }
+  }
+
+  hide(): void {
+    this.wechatCleanup?.();
+    this.wechatCleanup = undefined;
+    super.hide();
   }
 
   private renderGeneralTab(container: HTMLElement): void {
@@ -502,7 +511,7 @@ export class ClaudianSettingTab extends PluginSettingTab {
 
     // --- WeChat Bot ---
 
-    renderWechatBotSettingsSection(container, this.plugin);
+    this.wechatCleanup = renderWechatBotSettingsSection(container, this.plugin);
   }
 
   private renderHiddenProviderCommandSetting(

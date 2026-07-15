@@ -1,17 +1,18 @@
 import type { ToggleComponent } from 'obsidian';
 import { Notice, Setting } from 'obsidian';
 
+import { t } from '../../../i18n/i18n';
 import type { ImGatewayStatus, ImLogEntry } from '../../../im/types';
 import { updateWechatBotSettings } from '../../../im/wechat/settings';
 import type ClaudianPlugin from '../../../main';
 import { WechatQrModal } from './WechatQrModal';
 
-export function renderWechatBotSettingsSection(container: HTMLElement, plugin: ClaudianPlugin): void {
+export function renderWechatBotSettingsSection(container: HTMLElement, plugin: ClaudianPlugin): () => void {
   const settings = plugin.settings;
   const gateway = plugin.getWechatGateway();
   let currentQrModal: WechatQrModal | null = null;
 
-  new Setting(container).setName('Wechat bot').setHeading();
+  new Setting(container).setName(t('settings.wechatBot.heading')).setHeading();
 
   const statusEl = container.createDiv({ cls: 'claudian-wechat-status' });
   const enableStatusEl = container.createDiv({ cls: 'claudian-wechat-enable-status claudian-hidden' });
@@ -27,26 +28,35 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
 
   const renderStatus = (previousState?: ImGatewayStatus['state']): void => {
     const status = gateway?.getStatus() ?? { state: 'idle' };
-    let text = 'Idle';
+    let text: string;
     switch (status.state) {
       case 'starting':
-        text = 'Starting...';
+        text = t('settings.wechatBot.status.starting');
         break;
       case 'qr_ready':
-        text = 'Waiting for QR scan';
+        text = t('settings.wechatBot.status.qrReady');
         break;
       case 'logged_in':
-        text = `Logged in as ${status.userName ?? 'unknown'}`;
+        text = t('settings.wechatBot.status.loggedIn', {
+          userName: status.userName ?? t('settings.wechatBot.status.unknown'),
+        });
         break;
       case 'running':
-        text = `Running${status.userName ? ` as ${status.userName}` : ''}`;
+        text = t('settings.wechatBot.status.running', {
+          userName: status.userName ?? t('settings.wechatBot.status.unknown'),
+        });
         break;
       case 'error':
-        text = `Error: ${status.errorMessage ?? 'unknown'}`;
+        text = t('settings.wechatBot.status.error', {
+          message: status.errorMessage ?? t('settings.wechatBot.status.unknown'),
+        });
         break;
       case 'stopped':
-        text = 'Stopped';
+        text = t('settings.wechatBot.status.stopped');
         break;
+      case 'idle':
+      default:
+        text = t('settings.wechatBot.status.idle');
     }
     statusEl.setText(text);
 
@@ -54,21 +64,24 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
       enableStatusEl.addClass('claudian-hidden');
     } else {
       enableStatusEl.removeClass('claudian-hidden');
-      enableStatusEl.setText(`Status: ${text}`);
+      enableStatusEl.setText(t('settings.wechatBot.status.label', { status: text }));
     }
 
     if (status.qrCodeUrl && status.state === 'qr_ready') {
       qrContainer.empty();
       qrContainer.toggleClass('claudian-hidden', false);
-      qrContainer.createEl('p', { text: 'Scan this qr code with wechat:' });
+      qrContainer.createEl('p', { text: t('settings.wechatBot.qr.scanPrompt') });
       const img = qrContainer.createEl('img', { cls: 'claudian-wechat-qr-image' });
       img.src = status.qrCodeUrl;
-      img.alt = 'Wechat login qr code';
+      img.alt = t('settings.wechatBot.qr.modalTitle');
       img.onerror = () => {
-        qrContainer.createEl('p', { text: 'Could not load qr image. Use the re-login button to open it again.', cls: 'claudian-wechat-qr-error' });
+        qrContainer.createEl('p', {
+          text: t('settings.wechatBot.qr.loadError'),
+          cls: 'claudian-wechat-qr-error',
+        });
       };
       if (!currentQrModal) {
-        currentQrModal = new WechatQrModal(plugin.app, status.qrCodeUrl);
+        currentQrModal = new WechatQrModal(plugin, status.qrCodeUrl);
         currentQrModal.open();
         currentQrModal.onClose = () => {
           currentQrModal = null;
@@ -83,17 +96,24 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     }
 
     if (previousState === 'qr_ready' && status.state === 'logged_in') {
-      new Notice('Wechat bot connected successfully');
+      new Notice(t('settings.wechatBot.notice.connected'));
     }
     if (previousState === 'starting' && status.state === 'error') {
-      new Notice(`Wechat bot failed: ${status.errorMessage ?? 'unknown error'}`);
+      new Notice(
+        t('settings.wechatBot.notice.failed', {
+          message: status.errorMessage ?? t('settings.wechatBot.status.unknown'),
+        })
+      );
     }
   };
 
   const renderLogs = (logs: ImLogEntry[]): void => {
     logContainer.empty();
     if (logs.length === 0) {
-      logContainer.createEl('p', { text: 'No recent events.', cls: 'claudian-wechat-logs-empty' });
+      logContainer.createEl('p', {
+        text: t('settings.wechatBot.events.noEvents'),
+        cls: 'claudian-wechat-logs-empty',
+      });
       return;
     }
     const list = logContainer.createEl('ul', { cls: 'claudian-wechat-log-list' });
@@ -101,15 +121,18 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
       const time = new Date(entry.timestamp).toLocaleTimeString();
       const item = list.createEl('li', { cls: 'claudian-wechat-log-item' });
       item.createEl('span', { text: `[${time}]`, cls: 'claudian-wechat-log-time' });
-      item.createEl('span', { text: ` ${entry.summary}`, cls: `claudian-wechat-log-direction-${entry.direction}` });
+      item.createEl('span', {
+        text: ` ${entry.summary}`,
+        cls: `claudian-wechat-log-direction-${entry.direction}`,
+      });
     }
   };
 
   let enableToggle: ToggleComponent | null = null;
 
   new Setting(container)
-    .setName('Enable wechat bot')
-    .setDesc('Connect the wechat gateway.')
+    .setName(t('settings.wechatBot.enable.name'))
+    .setDesc(t('settings.wechatBot.enable.desc'))
     .addToggle((toggle) => {
       enableToggle = toggle;
       toggle
@@ -123,7 +146,7 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
               await plugin.reloadWechatGateway();
             } catch (error) {
               const message = error instanceof Error ? error.message : String(error);
-              new Notice(`Wechat bot failed: ${message}`);
+              new Notice(t('settings.wechatBot.notice.failed', { message }));
             }
             renderStatus(previousState);
           } else {
@@ -135,36 +158,36 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     });
 
   const controlSetting = new Setting(container)
-    .setName('Gateway control')
-    .setDesc('Re-login or refresh the wechat gateway connection.');
+    .setName(t('settings.wechatBot.gatewayControl.name'))
+    .setDesc(t('settings.wechatBot.gatewayControl.desc'));
 
   controlSetting.addButton((button) => {
     button
-      .setButtonText('Re-login')
+      .setButtonText(t('settings.wechatBot.gatewayControl.relogin'))
       .setWarning()
       .onClick(async () => {
         button.setDisabled(true);
-        button.setButtonText('Relogging...');
+        button.setButtonText(t('settings.wechatBot.gatewayControl.relogging'));
         const previousState = gateway?.getStatus().state;
         try {
           await plugin.reloginWechatGateway();
-          new Notice('Wechat gateway reloaded');
+          new Notice(t('settings.wechatBot.notice.reloaded'));
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          new Notice(`Wechat gateway failed: ${message}`);
+          new Notice(t('settings.wechatBot.notice.gatewayFailed', { message }));
         }
         button.setDisabled(false);
-        button.setButtonText('Re-login');
+        button.setButtonText(t('settings.wechatBot.gatewayControl.relogin'));
         renderStatus(previousState);
       });
   });
 
   new Setting(container)
-    .setName('Allowed contact')
-    .setDesc('Only respond to messages from this contact (nickname or remark). Leave empty to respond to anyone.')
+    .setName(t('settings.wechatBot.allowedContact.name'))
+    .setDesc(t('settings.wechatBot.allowedContact.desc'))
     .addText((text) =>
       text
-        .setPlaceholder('Contact nickname')
+        .setPlaceholder(t('settings.wechatBot.allowedContact.placeholder'))
         .setValue(settings.wechatBot.allowedContact)
         .onChange(async (value) => {
           updateWechatBotSettings(settings as unknown as Record<string, unknown>, { allowedContact: value });
@@ -173,8 +196,8 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     );
 
   new Setting(container)
-    .setName('System prompt')
-    .setDesc('The system prompt used for wechat conversations.')
+    .setName(t('settings.wechatBot.systemPrompt.name'))
+    .setDesc(t('settings.wechatBot.systemPrompt.desc'))
     .addTextArea((textarea) => {
       textarea
         .setValue(settings.wechatBot.systemPrompt)
@@ -187,8 +210,8 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     });
 
   new Setting(container)
-    .setName('Auto-approve tools')
-    .setDesc('Allow the bot to execute tools automatically without showing the approval modal. Use with caution.')
+    .setName(t('settings.wechatBot.autoApproveTools.name'))
+    .setDesc(t('settings.wechatBot.autoApproveTools.desc'))
     .addToggle((toggle) =>
       toggle
         .setValue(settings.wechatBot.autoApproveTools)
@@ -199,8 +222,8 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     );
 
   new Setting(container)
-    .setName('Max history messages')
-    .setDesc('Number of recent messages to keep for context.')
+    .setName(t('settings.wechatBot.maxHistoryMessages.name'))
+    .setDesc(t('settings.wechatBot.maxHistoryMessages.desc'))
     .addSlider((slider) =>
       slider
         .setLimits(1, 100, 1)
@@ -213,11 +236,11 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     );
 
   new Setting(container)
-    .setName('Reset session')
-    .setDesc('Clear the current wechat conversation history and start a new kimi session.')
+    .setName(t('settings.wechatBot.resetSession.name'))
+    .setDesc(t('settings.wechatBot.resetSession.desc'))
     .addButton((button) =>
       button
-        .setButtonText('Reset')
+        .setButtonText(t('settings.wechatBot.resetSession.reset'))
         .setWarning()
         .onClick(async () => {
           const activeGateway = plugin.getWechatGateway();
@@ -225,18 +248,18 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
             return;
           }
           button.setDisabled(true);
-          button.setButtonText('Resetting...');
+          button.setButtonText(t('settings.wechatBot.resetSession.resetting'));
           const previousState = activeGateway.getStatus().state;
           await plugin.reloadWechatGateway();
-          button.setButtonText('Reset');
+          button.setButtonText(t('settings.wechatBot.resetSession.reset'));
           button.setDisabled(false);
           renderStatus(previousState);
         })
     );
 
   const diagnosticSetting = new Setting(container)
-    .setName('Network diagnostic')
-    .setDesc('Test whether Obsidian can reach the wechat ilink endpoint.');
+    .setName(t('settings.wechatBot.networkDiagnostic.name'))
+    .setDesc(t('settings.wechatBot.networkDiagnostic.desc'));
 
   const diagnosticResultEl = container.createEl('pre', {
     cls: 'claudian-wechat-diagnostic claudian-hidden',
@@ -244,30 +267,30 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
 
   diagnosticSetting.addButton((button) =>
     button
-      .setButtonText('Test connection')
+      .setButtonText(t('settings.wechatBot.networkDiagnostic.testConnection'))
       .onClick(async () => {
         button.setDisabled(true);
-        button.setButtonText('Testing...');
+        button.setButtonText(t('settings.wechatBot.networkDiagnostic.testing'));
         diagnosticResultEl.toggleClass('claudian-hidden', true);
         try {
           const report = await plugin.getWechatGateway()?.diagnoseConnection();
-          diagnosticResultEl.setText(report ?? 'Gateway not initialized.');
+          diagnosticResultEl.setText(report ?? t('settings.wechatBot.networkDiagnostic.gatewayNotInitialized'));
           diagnosticResultEl.toggleClass('claudian-hidden', false);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          diagnosticResultEl.setText(`Diagnostic error: ${message}`);
+          diagnosticResultEl.setText(message);
           diagnosticResultEl.toggleClass('claudian-hidden', false);
         } finally {
           button.setDisabled(false);
-          button.setButtonText('Test connection');
+          button.setButtonText(t('settings.wechatBot.networkDiagnostic.testConnection'));
         }
       })
   );
 
-  container.createEl('h4', { text: 'Status' });
+  container.createEl('h4', { text: t('settings.wechatBot.events.status') });
   renderStatus();
 
-  container.createEl('h4', { text: 'Recent events' });
+  container.createEl('h4', { text: t('settings.wechatBot.events.recentEvents') });
   renderLogs([]);
 
   const updateFromStatusChange = (status: ImGatewayStatus): void => {
@@ -278,6 +301,12 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     }
   };
 
-  gateway?.onStatusChange(updateFromStatusChange);
-  gateway?.onLogChange(renderLogs);
+  const unsubscribeStatus = gateway?.onStatusChange(updateFromStatusChange);
+  const unsubscribeLog = gateway?.onLogChange(renderLogs);
+
+  return () => {
+    closeQrModal();
+    unsubscribeStatus?.();
+    unsubscribeLog?.();
+  };
 }
