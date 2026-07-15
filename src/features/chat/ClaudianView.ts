@@ -196,7 +196,13 @@ export class ClaudianView extends ItemView {
     this.navRowContent = this.buildNavRowContent();
     this.tabContentEl = this.viewContainerEl.createDiv({ cls: 'claudian-tab-content-container' });
     this.wechatPanelEl = this.viewContainerEl.createDiv({ cls: 'claudian-wechat-panel-host claudian-hidden' });
-    this.wechatPanel = new WechatPanel(this.plugin, this.wechatPanelEl, this);
+    this.wechatPanel = new WechatPanel(this.plugin, this.wechatPanelEl, this, {
+      onClose: () => {
+        if (this.wechatPanel?.isVisible()) {
+          this.toggleWechatPanel();
+        }
+      },
+    });
     this.buildInputFooter();
 
     this.tabManager = new TabManager(

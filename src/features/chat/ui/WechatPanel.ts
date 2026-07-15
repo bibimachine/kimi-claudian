@@ -5,6 +5,10 @@ import type { ImIncomingMessage, ImLogEntry } from '../../../im/types';
 import type ClaudianPlugin from '../../../main';
 import { MessageRenderer } from '../rendering/MessageRenderer';
 
+export interface WechatPanelOptions {
+  onClose?: () => void;
+}
+
 export class WechatPanel {
   private plugin: ClaudianPlugin;
   private container: HTMLElement;
@@ -16,11 +20,13 @@ export class WechatPanel {
   private headerTitleEl: HTMLElement;
   private unsubscribeMessages: (() => void) | null = null;
   private unsubscribeStatus: (() => void) | null = null;
+  private onClose?: () => void;
 
-  constructor(plugin: ClaudianPlugin, container: HTMLElement, component: Component) {
+  constructor(plugin: ClaudianPlugin, container: HTMLElement, component: Component, options: WechatPanelOptions = {}) {
     this.plugin = plugin;
     this.container = container;
     this.component = component;
+    this.onClose = options.onClose;
 
     this.container.empty();
     this.container.addClass('claudian-wechat-panel');
@@ -30,7 +36,7 @@ export class WechatPanel {
     setIcon(backBtn, 'arrow-left');
     backBtn.setAttribute('aria-label', 'Back to chat');
     backBtn.addEventListener('click', () => {
-      this.hide();
+      this.onClose?.();
     });
     this.headerTitleEl = header.createDiv({ cls: 'claudian-wechat-panel-title' });
     this.headerTitleEl.setText('Wechat conversations');
