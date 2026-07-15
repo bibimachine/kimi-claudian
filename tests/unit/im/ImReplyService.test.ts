@@ -15,7 +15,14 @@ jest.mock('../../../src/core/providers/ProviderRegistry');
 describe('ImReplyService', () => {
   let dataDir: string;
   let storage: ImSessionStorage;
-  let plugin: { settings: Record<string, unknown>; saveSettings: jest.Mock; app: Record<string, unknown> };
+  let plugin: {
+    settings: Record<string, unknown>;
+    saveSettings: jest.Mock;
+    app: Record<string, unknown>;
+    getConversationSync: jest.Mock;
+    createConversation: jest.Mock;
+    updateConversation: jest.Mock;
+  };
   let service: ImReplyService;
   let gateway: { sendText: jest.Mock; id: string };
 

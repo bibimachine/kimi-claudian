@@ -27,6 +27,7 @@ import {
 import { TabBar } from './tabs/TabBar';
 import { TabManager } from './tabs/TabManager';
 import type { TabData, TabId } from './tabs/types';
+import { WechatPanel } from './ui/WechatPanel';
 import { recalculateUsageForModel } from './utils/usageInfo';
 
 type LoadableView = {
@@ -52,6 +53,9 @@ export class ClaudianView extends ItemView {
   private viewContainerEl: HTMLElement | null = null;
   private logoEl: HTMLElement | null = null;
   private newTabButtonEl: HTMLElement | null = null;
+  private wechatPanelEl: HTMLElement | null = null;
+  private wechatPanel: WechatPanel | null = null;
+  private wechatButtonEl: HTMLElement | null = null;
 
   // Header elements
   private historyDropdown: HTMLElement | null = null;
@@ -191,6 +195,8 @@ export class ClaudianView extends ItemView {
 
     this.navRowContent = this.buildNavRowContent();
     this.tabContentEl = this.viewContainerEl.createDiv({ cls: 'claudian-tab-content-container' });
+    this.wechatPanelEl = this.viewContainerEl.createDiv({ cls: 'claudian-wechat-panel-host claudian-hidden' });
+    this.wechatPanel = new WechatPanel(this.plugin, this.wechatPanelEl, this);
     this.buildInputFooter();
 
     this.tabManager = new TabManager(
@@ -271,6 +277,8 @@ export class ClaudianView extends ItemView {
 
     this.tabBar?.destroy();
     this.tabBar = null;
+    this.wechatPanel?.destroy();
+    this.wechatPanel = null;
     this.scope = null;
   }
 
@@ -343,6 +351,13 @@ export class ClaudianView extends ItemView {
       this.toggleHistoryDropdown();
     });
 
+    this.wechatButtonEl = navActionsEl.createDiv({ cls: 'claudian-input-nav-btn claudian-wechat-nav-btn' });
+    setIcon(this.wechatButtonEl, 'message-circle');
+    this.wechatButtonEl.setAttribute('aria-label', 'Wechat conversations');
+    this.wechatButtonEl.addEventListener('click', () => {
+      this.toggleWechatPanel();
+    });
+
     fragment.appendChild(navActionsEl);
 
     const wrapper = activeDocument.createElement('div');
@@ -412,6 +427,26 @@ export class ClaudianView extends ItemView {
   /** Refreshes tab controls after settings that affect tab availability change. */
   refreshTabControls(): void {
     this.updateTabBarVisibility();
+  }
+
+  private toggleWechatPanel(): void {
+    if (!this.wechatPanel || !this.wechatPanelEl || !this.tabContentEl || !this.inputFooterEl) return;
+
+    const isVisible = this.wechatPanel.isVisible();
+    if (isVisible) {
+      this.wechatPanel.hide();
+      this.wechatPanelEl.addClass('claudian-hidden');
+      this.tabContentEl.removeClass('claudian-hidden');
+      this.inputFooterEl.removeClass('claudian-hidden');
+      this.wechatButtonEl?.removeClass('is-active');
+    } else {
+      this.wechatPanel.show();
+      this.wechatPanelEl.removeClass('claudian-hidden');
+      this.tabContentEl.addClass('claudian-hidden');
+      this.inputFooterEl.addClass('claudian-hidden');
+      this.wechatButtonEl?.addClass('is-active');
+      this.updateHistoryDropdown();
+    }
   }
 
   // ============================================
