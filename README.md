@@ -42,6 +42,17 @@ Then copy the generated `dist/kimi-claudian/` folder to `.obsidian/plugins/kimi-
 
 Open the chat sidebar from the ribbon icon. Select text and use the inline-edit hotkey to edit notes with a word-level diff preview. Kimi uses your vault as its working directory.
 
+## Changelog
+
+### v1.3.0 — WeChat Bot integration
+
+- Added a **WeChat Bot** backend channel via Tencent's official iLink protocol (`ilinkai.weixin.qq.com`).
+- QR-code login inside Obsidian settings; no unofficial/wechat-hook needed.
+- Incoming WeChat messages are routed through **Kimi Chat Runtime** and replied to automatically.
+- Per-contact conversation history is persisted in `.claudian/wechat-bot/` and mirrored into the Claudian conversation list for search/review.
+- New **WeChat conversation panel** in the Claudian sidebar (message-circle button) to view contacts and message history in real time.
+- Network diagnostics and Node `https`-based transport to work around Electron fetch/DNS issues on Windows.
+
 ## License
 
 Licensed under the [MIT License](LICENSE).
