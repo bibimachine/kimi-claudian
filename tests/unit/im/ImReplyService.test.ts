@@ -29,6 +29,17 @@ describe('ImReplyService', () => {
       },
       saveSettings: jest.fn(),
       app: {},
+      getConversationSync: jest.fn().mockReturnValue(null),
+      createConversation: jest.fn().mockResolvedValue({
+        id: 'wechat-user1',
+        providerId: 'kimi',
+        title: 'user1',
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        sessionId: null,
+      }),
+      updateConversation: jest.fn().mockResolvedValue(undefined),
     };
     service = new ImReplyService({ plugin: plugin as unknown as ClaudianPlugin, storage });
     gateway = { sendText: jest.fn().mockResolvedValue(undefined), id: 'wechat' };

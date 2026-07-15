@@ -96,6 +96,7 @@ export class ImReplyService {
       }
 
       await this.storage.save(conversation);
+      await this.syncToClaudianConversation(contactIdentifier, conversation);
 
       if (assistantMsg.content) {
         await gateway.sendText(message.fromUserId, assistantMsg.content);
@@ -112,6 +113,38 @@ export class ImReplyService {
         this.activeRuntimes.delete(runtime);
         runtime.cleanup();
       }
+    }
+  }
+
+  private async syncToClaudianConversation(contactName: string, imConversation: { contactId: string; sessionId: string | null; selectedModel: string | null; messages: ChatMessage[] }): Promise<void> {
+    const conversationId = `wechat-${imConversation.contactId}`;
+    const existing = this.plugin.getConversationSync(conversationId);
+    const now = Date.now();
+
+    if (existing) {
+      await this.plugin.updateConversation(conversationId, {
+        messages: imConversation.messages,
+        sessionId: imConversation.sessionId,
+        selectedModel: imConversation.selectedModel ?? undefined,
+        lastResponseAt: now,
+        updatedAt: now,
+      });
+    } else {
+      const conversation = await this.plugin.createConversation({
+        providerId: 'kimi',
+        sessionId: imConversation.sessionId ?? conversationId,
+        selectedModel: imConversation.selectedModel ?? undefined,
+      });
+      // Override the generated id/title so the conversation is keyed by contact.
+      conversation.id = conversationId;
+      conversation.title = contactName || conversationId;
+      conversation.messages = imConversation.messages;
+      conversation.lastResponseAt = now;
+      await this.plugin.updateConversation(conversationId, {
+        title: conversation.title,
+        messages: conversation.messages,
+        lastResponseAt: now,
+      });
     }
   }
 
