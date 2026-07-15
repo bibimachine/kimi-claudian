@@ -117,6 +117,36 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
       })
   );
 
+  const diagnosticSetting = new Setting(container)
+    .setName('Network diagnostic')
+    .setDesc('Test whether Obsidian can reach the wechat ilink endpoint.');
+
+  const diagnosticResultEl = container.createEl('pre', {
+    cls: 'claudian-wechat-diagnostic claudian-hidden',
+  });
+
+  diagnosticSetting.addButton((button) =>
+    button
+      .setButtonText('Test connection')
+      .onClick(async () => {
+        button.setDisabled(true);
+        button.setButtonText('Testing...');
+        diagnosticResultEl.toggleClass('claudian-hidden', true);
+        try {
+          const report = await plugin.getWechatGateway()?.diagnoseConnection();
+          diagnosticResultEl.setText(report ?? 'Gateway not initialized.');
+          diagnosticResultEl.toggleClass('claudian-hidden', false);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          diagnosticResultEl.setText(`Diagnostic error: ${message}`);
+          diagnosticResultEl.toggleClass('claudian-hidden', false);
+        } finally {
+          button.setDisabled(false);
+          button.setButtonText('Test connection');
+        }
+      })
+  );
+
   new Setting(container)
     .setName('Allowed contact')
     .setDesc('Only respond to messages from this contact (nickname or remark). Leave empty to respond to anyone.')

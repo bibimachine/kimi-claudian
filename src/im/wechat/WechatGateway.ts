@@ -1,4 +1,6 @@
+import * as dns from 'node:dns/promises';
 import * as fs from 'node:fs/promises';
+import * as https from 'node:https';
 import * as path from 'node:path';
 
 import type { WeixinMessage } from 'weixin-ilink';
@@ -136,8 +138,12 @@ export class WechatGateway implements ImGateway {
       this.pollPromise = this.runPollLoop();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      const type = classifyFetchError(error);
       this.setStatus({ state: 'error', errorMessage: message });
-      this.addLog('system', `Failed to start: ${message}`);
+      this.addLog('system', `Failed to start: ${message} (${type.description})`);
+      if (type.type === 'dns' || type.type === 'tcp' || type.type === 'tls') {
+        this.addLog('system', 'Network diagnosis tip: check DNS/proxy/VPN/firewall settings for ilinkai.weixin.qq.com');
+      }
       this.running = false;
       throw error;
     }
@@ -349,4 +355,71 @@ export class WechatGateway implements ImGateway {
   private isEnoentError(error: unknown): boolean {
     return !!error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT';
   }
+
+  /**
+   * Run a lightweight network diagnostic against the iLink endpoint.
+   * Returns a human-readable report; does not throw.
+   */
+  async diagnoseConnection(): Promise<string> {
+    const lines: string[] = [];
+    lines.push(`Target: ${ILINK_BASE_URL}`);
+
+    try {
+      const addresses = await dns.resolve4(new URL(ILINK_BASE_URL).hostname);
+      lines.push(`DNS A records: ${addresses.join(', ')}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      lines.push(`DNS resolution failed: ${message}`);
+    }
+
+    const result = await new Promise<{ ok: boolean; status?: number; body?: string; error?: string }>((resolve) => {
+      const req = https.request(
+        `${ILINK_BASE_URL}/ilink/bot/get_bot_qrcode?bot_type=3`,
+        { method: 'GET', timeout: 15000 },
+        (res) => {
+          let data = '';
+          res.on('data', (chunk) => { data += chunk; });
+          res.on('end', () => resolve({ ok: true, status: res.statusCode, body: data.slice(0, 200) }));
+        },
+      );
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ ok: false, error: 'request timeout' });
+      });
+      req.on('error', (error) => {
+        resolve({ ok: false, error: error.message });
+      });
+      req.end();
+    });
+
+    if (result.ok) {
+      lines.push(`HTTPS reachable: HTTP ${result.status}`);
+      lines.push(`Response preview: ${result.body ?? ''}`);
+    } else {
+      lines.push(`HTTPS unreachable: ${result.error}`);
+    }
+
+    lines.push('Note: ping may be blocked by Tencent even when the service is reachable.');
+    return lines.join('\n');
+  }
+}
+
+function classifyFetchError(error: unknown): { type: 'dns' | 'tcp' | 'tls' | 'timeout' | 'unknown'; description: string } {
+  if (error instanceof Error && error.name === 'AbortError') {
+    return { type: 'timeout', description: 'request timed out' };
+  }
+  const text = String(error ?? '').toLowerCase();
+  if (/failed to fetch|networkerror|net::err/i.test(text)) {
+    return { type: 'tcp', description: 'network connection failed (likely proxy/DNS/firewall)' };
+  }
+  if (/enotfound|eai_again|getaddrinfo/i.test(text)) {
+    return { type: 'dns', description: 'DNS resolution failed' };
+  }
+  if (/econnrefused/i.test(text)) {
+    return { type: 'tcp', description: 'connection refused' };
+  }
+  if (/ssl|tls|cert|unable_to_verify/i.test(text)) {
+    return { type: 'tls', description: 'TLS/SSL handshake failed' };
+  }
+  return { type: 'unknown', description: 'unknown network error' };
 }
