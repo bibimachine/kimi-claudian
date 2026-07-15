@@ -1,0 +1,121 @@
+/* WeChat Bot settings */
+
+.claudian-wechat-status {
+  margin: 8px 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+}
+
+.claudian-wechat-qr-container {
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--background-secondary);
+  border-radius: 6px;
+}
+
+.claudian-wechat-qr-container.claudian-hidden {
+  display: none;
+}
+
+.claudian-wechat-qr-image {
+  display: block;
+  width: 200px;
+  height: 200px;
+  margin: 8px 0;
+  border-radius: 4px;
+}
+
+.claudian-wechat-qr-error {
+  color: var(--text-error);
+  font-size: var(--font-ui-smaller);
+  margin-top: 8px;
+}
+
+.claudian-wechat-logs {
+  margin-top: 12px;
+}
+
+.claudian-wechat-logs-empty {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.claudian-wechat-log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--background-secondary);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.claudian-wechat-log-item {
+  font-size: var(--font-ui-smaller);
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.claudian-wechat-log-time {
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.claudian-wechat-log-direction-system {
+  color: var(--text-normal);
+}
+
+.claudian-wechat-log-direction-in {
+  color: var(--text-accent);
+}
+
+.claudian-wechat-log-direction-out {
+  color: var(--color-green);
+}
+
+.claudian-wechat-diagnostic {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--background-secondary);
+  border-radius: 6px;
+  font-size: var(--font-ui-smaller);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.claudian-wechat-diagnostic.claudian-hidden {
+  display: none;
+}
+
+/* QR modal */
+.claudian-wechat-qr-modal {
+  text-align: center;
+}
+
+.claudian-wechat-qr-modal-image {
+  display: block;
+  width: 256px;
+  height: 256px;
+  margin: 12px auto;
+  border-radius: 6px;
+}
+
+.claudian-wechat-qr-modal-label {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin-top: 12px;
+}
+
+.claudian-wechat-qr-modal-link {
+  display: block;
+  word-break: break-all;
+  font-size: var(--font-ui-smaller);
+  margin-bottom: 16px;
+}
+
+.claudian-wechat-qr-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}

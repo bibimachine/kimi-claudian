@@ -1,12 +1,15 @@
-import { Setting } from 'obsidian';
+import type { ButtonComponent} from 'obsidian';
+import { Notice, Setting } from 'obsidian';
 
 import type { ImLogEntry } from '../../../im/types';
 import { updateWechatBotSettings } from '../../../im/wechat/settings';
 import type ClaudianPlugin from '../../../main';
+import { WechatQrModal } from './WechatQrModal';
 
 export function renderWechatBotSettingsSection(container: HTMLElement, plugin: ClaudianPlugin): void {
   const settings = plugin.settings;
   const gateway = plugin.getWechatGateway();
+  let qrModalOpen = false;
 
   new Setting(container).setName('Wechat bot').setHeading();
 
@@ -46,10 +49,25 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
       const img = qrContainer.createEl('img', { cls: 'claudian-wechat-qr-image' });
       img.src = status.qrCodeUrl;
       img.alt = 'WeChat login QR code';
+      img.onerror = () => {
+        qrContainer.createEl('p', { text: 'Could not load qr image. Use the button below to open it in a modal.', cls: 'claudian-wechat-qr-error' });
+      };
+      if (!qrModalOpen && status.state === 'qr_ready') {
+        qrModalOpen = true;
+        const modal = new WechatQrModal(plugin.app, status.qrCodeUrl);
+        modal.open();
+        modal.onClose = () => {
+          qrModalOpen = false;
+        };
+      }
     } else {
       qrContainer.empty();
       qrContainer.toggleClass('claudian-hidden', true);
     }
+
+    const isRunning = status.state === 'running' || status.state === 'qr_ready' || status.state === 'logged_in' || status.state === 'starting';
+    startButton?.setDisabled(isRunning);
+    stopButton?.setDisabled(!isRunning || status.state === 'starting');
   };
 
   const renderLogs = (logs: ImLogEntry[]): void => {
@@ -89,30 +107,51 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     .setName('Gateway control')
     .setDesc('Start, stop, or re-login the wechat gateway.');
 
-  controlSetting.addButton((button) =>
+  let startButton: ButtonComponent | null = null;
+  let stopButton: ButtonComponent | null = null;
+
+  controlSetting.addButton((button) => {
+    startButton = button;
     button
       .setButtonText('Start')
       .onClick(async () => {
-        await plugin.getWechatGateway()?.start().catch(() => {});
+        button.setDisabled(true);
+        button.setButtonText('Starting...');
+        try {
+          await plugin.getWechatGateway()?.start();
+          new Notice('Wechat gateway started');
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          new Notice(`WeChat gateway failed: ${message}`);
+        }
         renderStatus();
-      })
-  );
+      });
+  });
 
-  controlSetting.addButton((button) =>
+  controlSetting.addButton((button) => {
+    stopButton = button;
     button
       .setButtonText('Stop')
       .onClick(async () => {
+        button.setDisabled(true);
+        button.setButtonText('Stopping...');
         await plugin.getWechatGateway()?.stop();
+        new Notice('Wechat gateway stopped');
         renderStatus();
-      })
-  );
+      });
+  });
 
   controlSetting.addButton((button) =>
     button
       .setButtonText('Re-login')
       .setWarning()
       .onClick(async () => {
+        button.setDisabled(true);
+        button.setButtonText('Relogging...');
         await plugin.reloadWechatGateway();
+        button.setDisabled(false);
+        button.setButtonText('Re-login');
+        new Notice('Wechat gateway reloaded');
         renderStatus();
       })
   );
