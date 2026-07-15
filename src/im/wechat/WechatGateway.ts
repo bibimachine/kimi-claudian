@@ -138,9 +138,13 @@ export class WechatGateway implements ImGateway {
       this.pollPromise = this.runPollLoop();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       const type = classifyFetchError(error);
       this.setStatus({ state: 'error', errorMessage: message });
       this.addLog('system', `Failed to start: ${message} (${type.description})`);
+      if (stack) {
+        this.addLog('system', `Error stack: ${stack.split('\n').slice(0, 3).join(' | ')}`);
+      }
       if (type.type === 'dns' || type.type === 'tcp' || type.type === 'tls') {
         this.addLog('system', 'Network diagnosis tip: check DNS/proxy/VPN/firewall settings for ilinkai.weixin.qq.com');
       }
@@ -417,11 +421,11 @@ export class WechatGateway implements ImGateway {
       const res = await fetch(`${ILINK_BASE_URL}/ilink/bot/get_bot_qrcode?bot_type=3`, { signal: controller.signal });
       window.clearTimeout(timer);
       const text = await res.text();
-      lines.push(`[fetch] OK: HTTP ${res.status}`);
-      lines.push(`[fetch] body: ${text.slice(0, 200)}`);
+      lines.push(`[fetch/electron] OK: HTTP ${res.status}`);
+      lines.push(`[fetch/electron] body: ${text.slice(0, 200)}`);
     } catch (error) {
       const message = error instanceof Error ? `${error.name} ${error.message}` : String(error);
-      lines.push(`[fetch] FAIL: ${message}`);
+      lines.push(`[fetch/electron] FAIL: ${message} (the plugin no longer uses this path for iLink traffic)`);
     }
 
     lines.push('Note: ping may be blocked by Tencent even when the service is reachable.');
