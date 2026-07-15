@@ -3,10 +3,10 @@ import * as fs from 'node:fs/promises';
 import * as https from 'node:https';
 import * as path from 'node:path';
 
-import type { WeixinMessage } from 'weixin-ilink';
-import { ILinkClient, loginWithQR, MessageItemType, MessageType } from 'weixin-ilink';
-
 import type { ImGateway, ImGatewayStatus, ImIncomingMessage, ImLogEntry } from '../types';
+import { loginWithQR } from './ilink/auth';
+import { ILinkClient } from './ilink/client';
+import { MessageItemType, MessageType, type WeixinMessage } from './ilink/types';
 
 const ILINK_BASE_URL = 'https://ilinkai.weixin.qq.com';
 const DEFAULT_CHANNEL_VERSION = 'kimi-claudian/1.0.0';

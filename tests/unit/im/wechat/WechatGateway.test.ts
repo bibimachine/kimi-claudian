@@ -2,11 +2,13 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { ILinkClient, loginWithQR, MessageItemType, MessageType } from 'weixin-ilink';
-
+import { loginWithQR } from '../../../../src/im/wechat/ilink/auth';
+import { ILinkClient } from '../../../../src/im/wechat/ilink/client';
+import { MessageItemType, MessageType } from '../../../../src/im/wechat/ilink/types';
 import { WechatGateway } from '../../../../src/im/wechat/WechatGateway';
 
-jest.mock('weixin-ilink');
+jest.mock('../../../../src/im/wechat/ilink/auth');
+jest.mock('../../../../src/im/wechat/ilink/client');
 
 function createMockILinkClient(overrides: Partial<InstanceType<typeof ILinkClient>> = {}): InstanceType<typeof ILinkClient> {
   return {
