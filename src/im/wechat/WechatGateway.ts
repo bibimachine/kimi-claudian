@@ -362,17 +362,29 @@ export class WechatGateway implements ImGateway {
    */
   async diagnoseConnection(): Promise<string> {
     const lines: string[] = [];
+    const hostname = new URL(ILINK_BASE_URL).hostname;
     lines.push(`Target: ${ILINK_BASE_URL}`);
 
+    // resolve4 uses the DNS protocol directly; lookup uses the system resolver (getaddrinfo).
     try {
-      const addresses = await dns.resolve4(new URL(ILINK_BASE_URL).hostname);
-      lines.push(`DNS A records: ${addresses.join(', ')}`);
+      const addresses = await dns.resolve4(hostname);
+      lines.push(`[dns.resolve4] OK: ${addresses.join(', ')}`);
     } catch (error) {
+      const code = (error as NodeJS.ErrnoException)?.code ?? 'unknown';
       const message = error instanceof Error ? error.message : String(error);
-      lines.push(`DNS resolution failed: ${message}`);
+      lines.push(`[dns.resolve4] FAIL: code=${code} ${message}`);
     }
 
-    const result = await new Promise<{ ok: boolean; status?: number; body?: string; error?: string }>((resolve) => {
+    try {
+      const lookup = await dns.lookup(hostname);
+      lines.push(`[dns.lookup] OK: ${lookup.address} (ipv${lookup.family})`);
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException)?.code ?? 'unknown';
+      const message = error instanceof Error ? error.message : String(error);
+      lines.push(`[dns.lookup] FAIL: code=${code} ${message}`);
+    }
+
+    const httpsResult = await new Promise<{ ok: boolean; status?: number; body?: string; error?: string }>((resolve) => {
       const req = https.request(
         `${ILINK_BASE_URL}/ilink/bot/get_bot_qrcode?bot_type=3`,
         { method: 'GET', timeout: 15000 },
@@ -392,11 +404,24 @@ export class WechatGateway implements ImGateway {
       req.end();
     });
 
-    if (result.ok) {
-      lines.push(`HTTPS reachable: HTTP ${result.status}`);
-      lines.push(`Response preview: ${result.body ?? ''}`);
+    if (httpsResult.ok) {
+      lines.push(`[node:https] OK: HTTP ${httpsResult.status}`);
+      lines.push(`[node:https] body: ${httpsResult.body ?? ''}`);
     } else {
-      lines.push(`HTTPS unreachable: ${result.error}`);
+      lines.push(`[node:https] FAIL: ${httpsResult.error}`);
+    }
+
+    try {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${ILINK_BASE_URL}/ilink/bot/get_bot_qrcode?bot_type=3`, { signal: controller.signal });
+      window.clearTimeout(timer);
+      const text = await res.text();
+      lines.push(`[fetch] OK: HTTP ${res.status}`);
+      lines.push(`[fetch] body: ${text.slice(0, 200)}`);
+    } catch (error) {
+      const message = error instanceof Error ? `${error.name} ${error.message}` : String(error);
+      lines.push(`[fetch] FAIL: ${message}`);
     }
 
     lines.push('Note: ping may be blocked by Tencent even when the service is reachable.');

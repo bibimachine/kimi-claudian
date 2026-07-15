@@ -1,6 +1,5 @@
 // Network diagnostic for WeChat iLink endpoint.
-// Run: node .context/test-wechat-network.mjs
-// Or in Obsidian DevTools Console, paste the fetch-based section.
+// Run: node scripts/test-wechat-network.mjs
 
 import dns from 'node:dns/promises';
 import https from 'node:https';
@@ -13,7 +12,7 @@ function request(url, options = {}) {
     const req = https.request(url, { method: 'GET', timeout: 15000, ...options }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve({ statusCode: res.statusCode, headers: res.headers, body: data }));
+      res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
     });
     req.on('timeout', () => { req.destroy(); reject(new Error('request timeout')); });
     req.on('error', reject);
@@ -24,31 +23,29 @@ function request(url, options = {}) {
 async function diagnose() {
   console.log(`Diagnosing ${HOST}...\n`);
 
-  // 1. DNS
   try {
     const addresses = await dns.resolve4(HOST);
-    console.log(`[DNS] OK: ${addresses.join(', ')}`);
+    console.log(`[dns.resolve4] OK: ${addresses.join(', ')}`);
   } catch (e) {
-    console.log(`[DNS] FAIL: ${e.code || e.message}`);
-    try {
-      const lookup = await dns.lookup(HOST);
-      console.log(`[DNS lookup] fallback: ${lookup.address} (${lookup.family})`);
-    } catch (e2) {
-      console.log(`[DNS lookup] FAIL: ${e2.code || e2.message}`);
-    }
+    console.log(`[dns.resolve4] FAIL: code=${e.code ?? 'unknown'} ${e.message}`);
   }
 
-  // 2. HTTPS with node https (matches Obsidian/Electron network stack more closely)
+  try {
+    const lookup = await dns.lookup(HOST);
+    console.log(`[dns.lookup] OK: ${lookup.address} (ipv${lookup.family})`);
+  } catch (e) {
+    console.log(`[dns.lookup] FAIL: code=${e.code ?? 'unknown'} ${e.message}`);
+  }
+
   try {
     const start = Date.now();
     const res = await request(URL);
-    console.log(`[HTTPS] OK: status=${res.statusCode} time=${Date.now() - start}ms`);
-    console.log(`[HTTPS] body preview: ${res.body.slice(0, 200)}`);
+    console.log(`[node:https] OK: status=${res.statusCode} time=${Date.now() - start}ms`);
+    console.log(`[node:https] body preview: ${res.body.slice(0, 200)}`);
   } catch (e) {
-    console.log(`[HTTPS] FAIL: ${e.code || e.message}`);
+    console.log(`[node:https] FAIL: ${e.code ?? ''} ${e.message}`);
   }
 
-  // 3. Native fetch (what weixin-ilink uses)
   try {
     const start = Date.now();
     const res = await fetch(URL, { signal: AbortSignal.timeout(15000) });
@@ -59,7 +56,6 @@ async function diagnose() {
     console.log(`[fetch] FAIL: ${e.name} ${e.message}`);
   }
 
-  // 4. Ping note
   console.log('\nNote: ping may be blocked by Tencent even when service is reachable. HTTPS test is authoritative.');
 }
 
