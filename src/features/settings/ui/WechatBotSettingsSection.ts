@@ -49,6 +49,13 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
     }
     statusEl.setText(text);
 
+    const enableDesc = enableSetting.descEl;
+    if (enableDesc) {
+      enableDesc.setText(status.state === 'idle' || status.state === 'stopped'
+        ? 'Connect the wechat gateway.'
+        : `Status: ${text}`);
+    }
+
     if (status.qrCodeUrl && status.state === 'qr_ready') {
       qrContainer.empty();
       qrContainer.toggleClass('claudian-hidden', false);
@@ -99,7 +106,7 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
 
   let enableToggle: ToggleComponent | null = null;
 
-  new Setting(container)
+  const enableSetting = new Setting(container)
     .setName('Enable wechat bot')
     .setDesc('Connect the wechat gateway.')
     .addToggle((toggle) => {
@@ -125,6 +132,7 @@ export function renderWechatBotSettingsSection(container: HTMLElement, plugin: C
           }
         });
     });
+  enableSetting.descEl.addClass('claudian-wechat-enable-desc');
 
   const controlSetting = new Setting(container)
     .setName('Gateway control')

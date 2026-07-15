@@ -319,6 +319,9 @@ export default class ClaudianPlugin extends Plugin {
   async reloadWechatGateway(): Promise<void> {
     await this.stopWechatGateway();
     this.initializeWechatGateway();
+    if (this.settings.wechatBot.enabled && this.wechatGateway) {
+      await this.wechatGateway.start();
+    }
   }
 
   async loadSettings() {
